@@ -1,0 +1,95 @@
+﻿@model fugaz_retro.Models.Usuario
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="tbl">
+    <h4>Editar Usuario</h4>
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="hidden" asp-for="IdUsuario" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="NombreUsuario" class="control-label">Nombre del Usuario</label>
+                        <input asp-for="NombreUsuario" class="form-control" />
+                        <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Correo" class="control-label disabled">Correo</label>
+                        <input asp-for="Correo" class="form-control" />
+                        <span asp-validation-for="Correo" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Contraseña" class="control-label">Contraseña</label>
+                        <input asp-for="Contraseña" class="form-control" />
+                        <span asp-validation-for="Contraseña" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+
+
+                    <div class="form-group">
+                        <label asp-for="Document" class="control-label">Documento</label>
+                        <input asp-for="Document" class="form-control" />
+                        <span asp-validation-for="Document" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Cliente.Telefono" class="control-label">Teléfono</label>
+                        <input name="Telefono" class="form-control" value="@Model.Cliente?.Telefono" />
+                        <span asp-validation-for="Cliente.Telefono" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="IdRol" class="control-label">Rol</label>
+                        <select asp-for="IdRol" class="form-control" asp-items="ViewBag.IdRol"></select>
+                        <span asp-validation-for="IdRol" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group form-check form-switch">
+                        <label class="form-check-label">
+                            <input class="form-check-input" asp-for="Estado" /> @Html.DisplayNameFor(model => model.Estado)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Guardar" class="btn btn-sm btn-primary" />
+                <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
+            </div>
+        </form>
+        <br />
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        document.getElementById('roleSelect').addEventListener('change', function () {
+            var roleSelect = document.getElementById('roleSelect');
+            var telefonoField = document.getElementById('telefonoField');
+            var telefonoInput = document.getElementById('telefonoInput');
+            var selectedRole = roleSelect.options[roleSelect.selectedIndex].text;
+
+            if (selectedRole !== 'Administrador') {
+                telefonoField.style.display = 'block';
+                telefonoInput.value = '';
+            } else {
+                telefonoField.style.display = 'none';
+                telefonoInput.value = 'N/A';
+            }
+        });
+
+        document.getElementById('roleSelect').dispatchEvent(new Event('change'));
+    </script>
+}

@@ -1,0 +1,483 @@
+﻿.UserBody {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    right: 8%;
+}
+/* -------------------------------------cabecera -------------------------------*/
+.centered {
+    text-align: center;
+    flex: 1;
+}
+
+.bienvenido {
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    margin: auto;
+    margin-left: 100px;
+    text-align: center;
+}
+
+.icons {
+    align-items: center;
+    margin-top: 12px;
+    margin-inline-end: 15px;
+    padding: 15px;
+    font-size: 1px;
+}
+
+    .icons a {
+        margin-right: 10px;
+    }
+
+/*--------------------------- menu de buzqueda ----------------------------*/
+.fr {
+    font-size: 30px;
+    display: block;
+    font-family: "Birthstone";
+    white-space: nowrap;
+    border-right: 2px solid;
+    width: 14ch;
+    animation: typing 2s steps(20), blink 0.5s infinite step-end alternate;
+    overflow: hidden;
+}
+
+@keyframes typing {
+    from {
+        width: 0;
+    }
+}
+
+@keyframes blink {
+    50% {
+        border-color: transparent;
+    }
+}
+
+.menu {
+    display: flex;
+    height: 60px;
+    width: 95%;
+    margin: 0px auto;
+    border-radius: 8px;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, #e2b091,#efcdb7);
+    padding: 5px 20px;
+}
+
+.busqueda {
+    margin-right: 0%;
+    max-width: 900px;
+    height: 45px;
+    width: 300px;
+    background-color: rgba(255, 255, 255, 0.635);
+    border: 1px solid #ccc;
+    border-radius: 30px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    margin-left: 100px;
+}
+
+.campo-busqueda {
+    border: none;
+    padding: 0px;
+    width: 15%;
+    font-size: 16px;
+    margin-left: 10px;
+    margin-top: -10px;
+    background-color: rgba(255, 255, 255, 0);
+    border-radius: 20px;
+    outline: none;
+    position: absolute;
+}
+
+    .campo-busqueda::placeholder {
+        opacity: 1;
+        color: #000000cc;
+    }
+
+    .campo-busqueda:focus {
+        background-color: #ffffff00;
+    }
+
+    .campo-busqueda:active,
+    .campo-busqueda:hover {
+        background-color: #f8f8f800;
+    }
+
+    .campo-busqueda:focus + .icono-lupa {
+        background-color: #ffffff00;
+        color: #000000;
+    }
+
+.icono-lupa {
+    height: 20px;
+    padding: 8px;
+    border-radius: 30px;
+    margin-top: -8%;
+    margin-left: 220px;
+    transition: background-color 0.3s, color 0.3s;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0);
+}
+
+    .icono-lupa box-icon {
+        margin: auto;
+        color: #000000;
+    }
+
+.iconos {
+    display: flex;
+    align-items: center;
+    margin-left: 370px;
+    margin-top: -32px;
+}
+
+.icono {
+    padding: 5px;
+}
+/*--------------categorias----------------------*/
+
+
+.categorias {
+    list-style: none;
+    width: 120%;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    margin: 0;
+}
+
+    .categorias li {
+        margin: 0;
+        padding: 0 15px;
+        border-right: 1px solid #000000;
+    }
+
+        .categorias li:last-child {
+            border-right: none;
+        }
+
+    .categorias a {
+        display: block;
+        text-decoration: none;
+        color: #333;
+    }
+
+/*----------------------------slider------------------------------------------*/
+/*.slider{
+    margin-top:140px;
+}*/
+.swiper {
+    background: #e2ff0900;
+    height: 400px;
+    width: 1050px;
+    top: 20px;
+    padding: 70px;
+}
+
+.swiper-slide {
+    text-align: center;
+    justify-content: end;
+    font-size: 60px;
+    z-index: 10;
+    color: #fff;
+}
+
+.swiper-slide-img {
+    height: 100%;
+    width: 100%;
+}
+
+.swiper-button-prev {
+    color: #e9e8e8ec;
+}
+
+.swiper-button-next {
+    color: #dfdfdfcb;
+}
+/*-----------------------------cajas de ventas-------------------------------*/
+.container-cart-icon {
+    width: 30px;
+    height: 30px;
+    margin-left: 250%;
+    stroke: #000;
+}
+
+.icon-cart:hover {
+    cursor: pointer;
+}
+
+img {
+    max-width: 100%;
+}
+
+.container-icon {
+    position: relative;
+}
+
+.count-products {
+    margin-left: 20px;
+    margin-top: -45%;
+    right: 0;
+    background-color: #000;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+}
+
+.cjventas {
+    text-align: center;
+    margin-top: 70px;
+}
+
+.cjventa {
+    margin-top: 0px;
+    justify-content: center;
+    display: flex;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.cj {
+    width: 80%;
+    height: 90%;
+    padding: 10px;
+    text-align: center;
+    margin: 15px;
+    border: 1px solid #00000033;
+    border-radius: 5px;
+    background-color: #EDEBEB;
+}
+
+    .cj a {
+        display: block;
+        margin-left: 240px;
+    }
+
+    .cj img {
+        max-height: 56%;
+        border-radius: 8px;
+    }
+
+#prev {
+    position: absolute;
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 520px;
+    left: 8%;
+}
+
+#next {
+    position: absolute;
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 520px;
+    left: 90%;
+}
+
+.btnven {
+    margin-top: -20px;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+}
+
+.iconb {
+    height: 20px;
+    width: 20px;
+}
+
+.ch {
+    background-color: #000;
+    color: #fff;
+    padding: 5px;
+    border: none;
+    border-radius: 5px;
+    margin: 10px;
+    width: 40%;
+    height: auto;
+}
+
+#ch {
+    color: #fff;
+    background: none;
+    border: none;
+}
+
+.ch:hover {
+    background-color: #919191;
+    color: #000;
+}
+
+.ac {
+    background-color: #000;
+    color: #fff;
+    padding: 5px;
+    border: none;
+    border-radius: 5px;
+    margin: 10px;
+    width: 40%;
+    height: auto;
+}
+
+#ac {
+    color: #fff;
+    background: none;
+    border: none;
+}
+
+.ac:hover {
+    background-color: #919191;
+    color: #000;
+}
+/*--------cabecera-------------*/
+@media screen and (max-width: 1040px) {
+    .barraSup {
+        background-color: #000000;
+        flex-direction: row;
+        display: grid;
+        height: 100px;
+        width: 1040px;
+    }
+
+    .bienvenido {
+        margin-left: 30px;
+        font-size: 30px;
+        margin-top: 5px;
+    }
+
+    .icons {
+        display: inline;
+        margin-top: 2px;
+        flex-direction: row;
+        text-align: center;
+        margin-inline-end: 0px;
+    }
+
+        .icons img {
+            width: 40px;
+            margin-top: 10px;
+            padding: 0 20px;
+        }
+
+        .icons a {
+            margin: 0 10px;
+        }
+    /*----------busqueda-------------*/
+    .menu {
+        display: grid;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+        width: 1040px;
+        height: 150px;
+    }
+
+    .fr {
+        display: grid;
+        text-align: center;
+        margin: auto;
+        font-size: 50px;
+    }
+
+    .busqueda {
+        width: 450px;
+        margin: auto 20px;
+        height: 50px;
+    }
+
+    .iconos {
+        margin-left: 500px;
+    }
+
+    .campo-busqueda {
+        margin-top: 5px;
+    }
+
+        .campo-busqueda::placeholder {
+            font-size: 30px;
+        }
+
+    .iconos img {
+        height: 65px;
+        margin-right: 0px;
+        margin-top: -30px;
+    }
+    /*--------categorias------------*/
+    .lista-Menu {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 318px;
+        margin-left: 700px;
+        background-color: #eabcac;
+        width: 300px;
+        height: 400px;
+        padding: 20px;
+        border-radius: 5px;
+        z-index: 10;
+    }
+
+        .lista-Menu.active {
+            display: flex;
+        }
+
+    .burguer-menu {
+        display: block;
+        margin-top: -115px;
+        margin-left: 880px;
+    }
+
+    .categorias {
+        display: block;
+    }
+
+        .categorias li {
+            border-right: none;
+        }
+
+        .categorias li {
+            font-size: 40px;
+            border-top: 1px solid #000;
+        }
+
+            .categorias li:first-child {
+                border-top: none;
+            }
+}
+/*-----------------------cajas de ventas RESPONSIVE------------------------------*/
+/* Estilos para pantallas con un ancho menor a 1040px */
+@media (max-width: 1040px) {
+    .cjventa {
+        display: flex;
+        flex-direction: column; /* Cambia la direcci n de los elementos a vertical */
+        align-items: center; /* Centra los elementos horizontalmente */
+    }
+
+    .cj {
+        width: 90%; /* Reduce el ancho de las cajas */
+        max-width: 300px; /* Establece un ancho m ximo para las cajas */
+    }
+
+        .cj img {
+            max-width: 100%; /* Ajusta el tama o m ximo de las im genes */
+            height: auto;
+        }
+
+
+
+        .cj a {
+            margin-left: 0; /* Centra los  conos de coraz n en pantallas peque as */
+        }
+}

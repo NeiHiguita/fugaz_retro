@@ -1,0 +1,304 @@
+@model fugaz_retro.Models.Compra
+
+@{
+    ViewData["Title"] = "Crear Compra";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="tbl">
+    <h1>Crear Compra</h1>
+    <hr />
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label for="TipoProveedor">Tipo de Proveedor</label>
+                        <select id="TipoProveedor" class="form-control">
+                            <option value="">Selecciona tipo de proveedor</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Natural">Natural</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="IdProveedor" class="control-label">Proveedor</label>
+                        <select asp-for="IdProveedor" class="form-control" id="IdProveedor"></select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="FechaCompra" class="control-label">Fecha de Compra</label>
+                        <input asp-for="FechaCompra" class="form-control" id="fechaCompra" />
+                        <span asp-validation-for="FechaCompra" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="MetodoPago" class="control-label">Método de Pago</label>
+                        <select asp-for="MetodoPago" class="form-control" id="MetodoPago">
+                            <option value="">Selecciona</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                        <span asp-validation-for="MetodoPago" class="text-danger"></span>
+                    </div>
+                    <div class="form-group" id="TipoTransferenciaContainer" style="display: none;">
+                        <label asp-for="TipoTransferencia" class="control-label">Tipo de Transferencia</label>
+                        <select asp-for="TipoTransferencia" class="form-control" id="TipoTransferencia" name="TipoTransferencia">
+                            <option value="">Tipo de Transferencia</option>
+                            <option value="Nequi">Nequi</option>
+                            <option value="Bancolombia">Bancolombia</option>
+                            <option value="Daviplata">Daviplata</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos para añadir detalle de compra en formato tabla -->
+                    <h4>Detalle de Compra</h4>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Precio Unitario</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <select id="idInsumo" class="form-control">
+                                        <option value="">Selecciona un insumo</option>
+                                        @if (ViewBag.Insumos != null && ViewBag.Insumos.Count > 0)
+                                        {
+                                            foreach (var insumo in ViewBag.Insumos)
+                                            {
+                                                <option value="@insumo.IdInsumo">@insumo.NombreInsumo</option>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <p>No se encontraron insumos.</p>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" id="precio_unitario" />
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" id="cantidad" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" id="subtotalProducto" readonly />
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-primary" id="addDetalleButton">Añadir</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Tabla para mostrar los detalles añadidos -->
+                    <table class="table" id="detallePedidosTable">
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Precio Unitario</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
+                    <div id="detallesPedidosHidden"></div>
+                    <!-- Campos para subtotal, IVA, descuento y precio total -->
+
+                    <div class="form-group">
+                        <label asp-for="Subtotal" class="control-label">Subtotal</label>
+                        <input asp-for="Subtotal" id="subtotal" class="form-control" readonly />
+                        <span asp-validation-for="Subtotal" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Iva" class="control-label">IVA</label>
+                        <input asp-for="Iva" id="iva" class="form-control" readonly />
+                        <span asp-validation-for="Iva" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Descuento" class="control-label">Descuento</label>
+                        <input asp-for="Descuento" id="descuento" class="form-control" />
+                        <span asp-validation-for="Descuento" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PrecioTotal" class="control-label">Precio Total</label>
+                        <input asp-for="PrecioTotal" id="precioTotal" class="form-control" readonly />
+                        <span asp-validation-for="PrecioTotal" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">Crear</button>
+                        <a asp-action="Index" class="btn btn-secondary">Regresar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var detallesCompra = [];
+
+            // Función para añadir un nuevo detalle de compra
+            function addDetallePedido() {
+                var insumoId = $('#idInsumo').val();
+                var insumoTexto = $('#idInsumo option:selected').text();
+                var precioUnitario = parseFloat($('#precio_unitario').val());
+                var cantidad = parseFloat($('#cantidad').val());
+
+                if (!insumoId || isNaN(precioUnitario) || isNaN(cantidad) || precioUnitario <= 0 || cantidad <= 0) {
+                    alert("Por favor completa todos los campos del detalle de compra con valores válidos.");
+                    return;
+                }
+
+                var subtotal = precioUnitario * cantidad;
+
+                var nuevoDetalle = {
+                    InsumoId: insumoId,
+                    Insumo: insumoTexto,
+                    PrecioUnitario: precioUnitario,
+                    Cantidad: cantidad,
+                    Subtotal: subtotal
+                };
+
+                detallesCompra.push(nuevoDetalle);
+
+                actualizarTablaDetalles();
+                calcularTotales();
+                limpiarCamposDetalle();
+                actualizarDetallesOcultos();
+            }
+
+            // Función para actualizar la tabla de detalles de compra
+            function actualizarTablaDetalles() {
+                var tableBody = $('#detallePedidosTable tbody');
+                tableBody.empty();
+
+                detallesCompra.forEach(function (detalle, index) {
+                    var fila = '<tr>' +
+                        '<td>' + detalle.Insumo + '</td>' +
+                        '<td>' + detalle.PrecioUnitario.toFixed(2) + '</td>' +
+                        '<td>' + detalle.Cantidad + '</td>' +
+                        '<td>' + detalle.Subtotal.toFixed(2) + '</td>' +
+                        '<td><button type="button" class="btn btn-danger" onclick="eliminarDetallePedido(' + index + ')">Eliminar</button></td>' +
+                        '</tr>';
+
+                    tableBody.append(fila);
+                });
+            }
+
+            // Función para eliminar un detalle de compra
+            window.eliminarDetallePedido = function (index) {
+                detallesCompra.splice(index, 1);
+                actualizarTablaDetalles();
+                calcularTotales();
+                actualizarDetallesOcultos();
+            }
+
+            // Función para limpiar los campos del detalle de compra
+            function limpiarCamposDetalle() {
+                $('#idInsumo').val('');
+                $('#precio_unitario').val('');
+                $('#cantidad').val('');
+                $('#subtotalProducto').val('');
+            }
+
+            // Función para actualizar los inputs ocultos con los detalles de compra
+            function actualizarDetallesOcultos() {
+                var detallesOcultosDiv = $('#detallesPedidosHidden');
+                detallesOcultosDiv.empty();
+
+                detallesCompra.forEach(function (detalle, index) {
+                    detallesOcultosDiv.append('<input type="hidden" name="detallesCompra[' + index + '].IdInsumo" value="' + detalle.InsumoId + '" />');
+                    detallesOcultosDiv.append('<input type="hidden" name="detallesCompra[' + index + '].PrecioUnitario" value="' + detalle.PrecioUnitario + '" />');
+                    detallesOcultosDiv.append('<input type="hidden" name="detallesCompra[' + index + '].Cantidad" value="' + detalle.Cantidad + '" />');
+                    detallesOcultosDiv.append('<input type="hidden" name="detallesCompra[' + index + '].Subtotal" value="' + detalle.Subtotal + '" />');
+                });
+            }
+
+            // Función para calcular y actualizar los valores de subtotal, IVA y precio total
+            function calcularTotales() {
+                var sumaSubtotales = detallesCompra.reduce(function (sum, detalle) {
+                    return sum + detalle.Subtotal;
+                }, 0);
+
+                $('#subtotal').val(sumaSubtotales.toFixed(2));
+
+                var iva = sumaSubtotales * 0.19;
+                $('#iva').val(iva.toFixed(2));
+
+                var descuento = parseFloat($('#descuento').val() || 0);
+                var precioTotal = sumaSubtotales - descuento;
+                $('#precioTotal').val(precioTotal.toFixed(2));
+            }
+
+            // Manejar el cambio en el tipo de proveedor
+            $('#TipoProveedor').change(function () {
+                var tipoProveedor = $(this).val();
+                var proveedores = @Html.Raw(Json.Serialize(ViewBag.Proveedores));
+
+                $('#IdProveedor').empty();
+
+                var filteredProveedores = proveedores.filter(function (proveedor) {
+                    if (tipoProveedor === 'Natural') {
+                        return proveedor.nombreCompleto != null && proveedor.nombreCompleto.trim() !== '';
+                    } else if (tipoProveedor === 'Jurídico') {
+                        return proveedor.representanteLegal != null && proveedor.representanteLegal.trim() !== '';
+                    }
+                    return false;
+                }).sort(function (a, b) {
+                    if (tipoProveedor === 'Natural') {
+                        return a.nombreCompleto.localeCompare(b.nombreCompleto);
+                    } else if (tipoProveedor === 'Jurídico') {
+                        return a.representanteLegal.localeCompare(b.representanteLegal);
+                    }
+                });
+
+                $.each(filteredProveedores, function (index, proveedor) {
+                    if (tipoProveedor === 'Natural') {
+                        $('#IdProveedor').append($('<option>', {
+                            value: proveedor.idProveedor,
+                            text: proveedor.nombreCompleto
+                        }));
+                    } else if (tipoProveedor === 'Jurídico') {
+                        $('#IdProveedor').append($('<option>', {
+                            value: proveedor.idProveedor,
+                            text: proveedor.representanteLegal
+                        }));
+                    }
+                });
+            });
+
+            // Manejar el cambio en el método de pago
+            $('#MetodoPago').change(function () {
+                var metodoPago = $(this).val();
+                var tipoTransferenciaField = $('#TipoTransferenciaContainer');
+
+                if (metodoPago === 'Transferencia') {
+                    tipoTransferenciaField.show();
+                } else {
+                    tipoTransferenciaField.hide();
+                }
+            });
+
+            // Manejar el cambio en el descuento
+            $('#descuento').on('input', function () {
+                calcularTotales();
+            });
+
+            // Calcular totales al cargar la página
+            calcularTotales();
+
+            // Manejar el click en el botón de añadir detalle
+            $('#addDetalleButton').click(addDetallePedido);
+        });
+    </script>
+}

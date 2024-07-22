@@ -1,0 +1,46 @@
+﻿@model fugaz_retro.Models.DetalleProducto
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="tbl">
+    <h4 class="mb-4">DetalleProducto</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <dl class="row">
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Producto.NombreProducto)
+                </dt>
+                <dd class="col-sm-8">
+                    @Html.DisplayFor(model => model.Producto.NombreProducto)
+                </dd>
+                </<br />
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Talla)
+                </dt>
+                <dd class="col-sm-8">
+                    @Html.DisplayFor(model => model.Talla)
+                </dd>
+                <br />
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Color)
+                </dt>
+                <dd class="col-sm-8">
+                    @Html.DisplayFor(model => model.Color)
+                </dd>
+                <div class="mt-4">
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+</div>

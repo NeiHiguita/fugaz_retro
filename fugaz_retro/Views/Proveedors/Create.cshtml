@@ -1,0 +1,117 @@
+﻿@model fugaz_retro.Models.Proveedor
+
+@{
+    ViewData["Title"] = "Crear Proveedor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="tbl">
+<h1>Crear Proveedor</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" id="createForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="TipoProveedor" class="control-label">Tipo de Proveedor</label>
+                <select asp-for="TipoProveedor" class="form-control" id="tipoProveedorSelect">
+                    <option value="">Selecciona tipo de proveedor</option>
+                    <option value="Jurídico">Jurídico</option>
+                    <option value="Natural">Natural</option>
+                </select>
+                <span asp-validation-for="TipoProveedor" class="text-danger" id="tipoProveedor" ></span>
+            </div>
+                <input type="hidden" asp-for="TipoProveedor" id="tipoProveedor" />
+
+
+                <!-- Campos para Natural -->
+                <div id="camposNatural" style="display:none;">
+                    <div class="form-group">
+                        <label asp-for="NombreCompleto" class="control-label">Nombre Completo</label>
+                        <input asp-for="NombreCompleto" class="form-control" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Documento" class="control-label">Documento</label>
+                        <input asp-for="Documento" class="form-control" />
+                        <span asp-validation-for="Documento" class="text-danger"></span>
+                    </div>
+                    <div id="errorDocumento" class="alert alert-danger" style="display:none;"></div>
+                </div>
+            <!-- Campos para Empresa -->
+            <div id="camposJuridico" style="display:none;">
+                <div class="form-group">
+                      <label asp-for="Empresa" class="control-label">Empresa</label>
+                      <input asp-for="Empresa" class="form-control" />
+                      <span asp-validation-for="Empresa" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                        <label asp-for="RepresentanteLegal" class="control-label">Representante legal</label>
+                        <input asp-for="RepresentanteLegal" class="form-control" />
+                        <span asp-validation-for="RepresentanteLegal" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Rut" class="control-label">Rut</label>
+                    <input asp-for="Rut" class="form-control" />
+                    <span asp-validation-for="Rut" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Telefono" class="control-label">Teléfono</label>
+                <input asp-for="Telefono" class="form-control" />
+                <span asp-validation-for="Telefono" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Direccion" class="control-label">Dirección</label>
+                <input asp-for="Direccion" class="form-control" />
+                <span asp-validation-for="Direccion" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check form-switch">
+                <input class="form-check-input" asp-for="Estado" id="Estado" data-toggle="switch" data-size="large" data-on-color="success" data-off-color="danger" />
+                <label class="form-check-label" for="Estado">@Html.DisplayNameFor(model => model.Estado)</label>
+            </div>
+                <style>
+                    .form-group-botones {
+                        margin-top: 20px;
+                        margin-right: 10px;
+                    }
+                </style>
+
+                <div class="form-group-botones">
+                    <button type="submit" class="btn btn-success">Crear</button>
+                    <a asp-action="Index" class="btn btn-secondary">Regresar</a>
+                </div>
+        </form>
+    </div>
+</div>
+</div>
+
+<!--CSS -->
+<link rel="stylesheet" href="~/lib/bootstrap-switch/css/bootstrap3/bootstrap-switch.min.css" />
+<link rel="stylesheet" href="~/css/site.css" />
+@section Scripts {
+    <!-- Carga SweetAlert2 desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Mostrar u ocultar campos al cambiar el tipo de proveedor
+            $("#tipoProveedorSelect").change(function () {
+                var tipoProveedor = $(this).val();
+                if (tipoProveedor === "Jurídico") {
+                    $("#camposJuridico").show();
+                    $("#camposNatural").hide();
+                } else if (tipoProveedor === "Natural") {
+                    $("#camposJuridico").hide();
+                    $("#camposNatural").show();
+                }
+            });
+
+            // Inicialmente, ejecutar el cambio para mostrar los campos según el tipo de proveedor seleccionado
+            $("#tipoProveedorSelect").change();
+        });
+
+    </script>
+}

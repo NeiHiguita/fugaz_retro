@@ -1,0 +1,72 @@
+﻿@model fugaz_retro.Models.Role
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="tbl">
+    <h1>Editar Rol</h1>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form id="editForm" asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="IdRol" />
+                <div class="form-group">
+                    <label asp-for="NombreRol" class="control-label">Nombre Rol</label>
+                    <input asp-for="NombreRol" class="form-control" />
+                    <span asp-validation-for="NombreRol" class="text-danger"></span>
+                </div>
+                <br />
+                <div class="form-group">
+                    <input type="submit" value="Guardar" class="btn btn-sm btn-primary" />
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
+                </div>
+            </form>
+            <br />
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        // Escuchar el evento submit del formulario
+        document.getElementById("editForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Evitar el envío del formulario por defecto
+
+            // Realizar la petición AJAX para enviar los datos del formulario
+            fetch(this.action, {
+                method: this.method,
+                body: new FormData(this)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Mostrar alerta de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'Se ha actualizado correctamente.'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '@Url.Action("Index")';
+                            }
+                        });
+                    } else {
+                        // Si hay algún error, mostrar mensaje de error
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al actualizar el rol.'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+}
