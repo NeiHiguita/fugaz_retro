@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using Rotativa.AspNetCore;
+
 
 
 namespace fugaz_retro.Controllers
@@ -239,12 +241,31 @@ namespace fugaz_retro.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index)); 
+            return RedirectToAction(nameof(Index));
         }
 
         private bool CompraExists(int id)
         {
             return (_context.Compras?.Any(e => e.IdCompra == id)).GetValueOrDefault();
         }
+
+        // Método para generar PDF
+        public async Task<IActionResult> GenerateReport()
+        {
+            var compras = await _context.Compras
+                .Include(c => c.IdProveedorNavigation)
+                .Include(c => c.DetalleCompras)
+                    .ThenInclude(dc => dc.IdInsumoNavigation)
+                .ToListAsync();
+
+            var pdf = new ViewAsPdf("ReporteGeneralCompras", compras)
+            {
+                PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                CustomSwitches = "--footer-right [page]/[toPage] --footer-font-size 10"
+            };
+
+            return pdf;
+        }
+
     }
 }

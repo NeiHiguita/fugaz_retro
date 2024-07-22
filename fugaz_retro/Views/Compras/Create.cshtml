@@ -8,9 +8,9 @@
     <h1>Crear Compra</h1>
     <hr />
     <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <form asp-action="Create" method="post">
+        <form asp-action="Create" method="post">
+            <div class="row">
+                <div class="col-md-6">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
                         <label for="TipoProveedor">Tipo de Proveedor</label>
@@ -26,7 +26,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="FechaCompra" class="control-label">Fecha de Compra</label>
-                        <input asp-for="FechaCompra" class="form-control" id="fechaCompra" />
+                        <input asp-for="FechaCompra" type="date" class="form-control" id="fechaCompra" />
                         <span asp-validation-for="FechaCompra" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -47,16 +47,40 @@
                             <option value="Daviplata">Daviplata</option>
                         </select>
                     </div>
-
-                    <!-- Campos para añadir detalle de compra en formato tabla -->
-                    <h4>Detalle de Compra</h4>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Subtotal" class="control-label">Subtotal</label>
+                        <input asp-for="Subtotal" id="subtotal" class="form-control" readonly />
+                        <span asp-validation-for="Subtotal" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Iva" class="control-label">IVA</label>
+                        <input asp-for="Iva" id="iva" class="form-control" readonly />
+                        <span asp-validation-for="Iva" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Descuento" class="control-label">Descuento</label>
+                        <input asp-for="Descuento" id="descuento" class="form-control" />
+                        <span asp-validation-for="Descuento" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PrecioTotal" class="control-label">Precio Total</label>
+                        <input asp-for="PrecioTotal" id="precioTotal" class="form-control" readonly />
+                        <span asp-validation-for="PrecioTotal" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Campos para añadir detalle de compra en formato tabla -->
+            <h4>Detalle de Compra</h4>
+            <div class="row">
+                <div class="col-md-12">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Insumo</th>
                                 <th>Precio Unitario</th>
                                 <th>Cantidad</th>
-                                <th>Subtotal</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
@@ -85,9 +109,6 @@
                                     <input type="number" class="form-control" id="cantidad" />
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control" id="subtotalProducto" readonly />
-                                </td>
-                                <td>
                                     <button type="button" class="btn btn-primary" id="addDetalleButton">Añadir</button>
                                 </td>
                             </tr>
@@ -110,38 +131,15 @@
                     </table>
 
                     <div id="detallesPedidosHidden"></div>
-                    <!-- Campos para subtotal, IVA, descuento y precio total -->
-
-                    <div class="form-group">
-                        <label asp-for="Subtotal" class="control-label">Subtotal</label>
-                        <input asp-for="Subtotal" id="subtotal" class="form-control" readonly />
-                        <span asp-validation-for="Subtotal" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="Iva" class="control-label">IVA</label>
-                        <input asp-for="Iva" id="iva" class="form-control" readonly />
-                        <span asp-validation-for="Iva" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="Descuento" class="control-label">Descuento</label>
-                        <input asp-for="Descuento" id="descuento" class="form-control" />
-                        <span asp-validation-for="Descuento" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="PrecioTotal" class="control-label">Precio Total</label>
-                        <input asp-for="PrecioTotal" id="precioTotal" class="form-control" readonly />
-                        <span asp-validation-for="PrecioTotal" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-success">Crear</button>
-                        <a asp-action="Index" class="btn btn-secondary">Regresar</a>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Crear</button>
+                <a asp-action="Index" class="btn btn-secondary">Regresar</a>
+            </div>
+        </form>
     </div>
 </div>
-
 @section Scripts {
     <script>
         $(document).ready(function () {
@@ -151,7 +149,7 @@
             function addDetallePedido() {
                 var insumoId = $('#idInsumo').val();
                 var insumoTexto = $('#idInsumo option:selected').text();
-                var precioUnitario = parseFloat($('#precio_unitario').val());
+                var precioUnitario = parseFloat(parsearValorPesosColombianos($('#precio_unitario').val()));
                 var cantidad = parseFloat($('#cantidad').val());
 
                 if (!insumoId || isNaN(precioUnitario) || isNaN(cantidad) || precioUnitario <= 0 || cantidad <= 0) {
@@ -185,9 +183,9 @@
                 detallesCompra.forEach(function (detalle, index) {
                     var fila = '<tr>' +
                         '<td>' + detalle.Insumo + '</td>' +
-                        '<td>' + detalle.PrecioUnitario.toFixed(0) + '</td>' +
+                        '<td>' + formatearPesosColombianos(detalle.PrecioUnitario) + '</td>' +
                         '<td>' + detalle.Cantidad + '</td>' +
-                        '<td>' + detalle.Subtotal.toFixed(0) + '</td>' +
+                        '<td>' + formatearPesosColombianos(detalle.Subtotal) + '</td>' +
                         '<td><button type="button" class="btn btn-danger" onclick="eliminarDetallePedido(' + index + ')">Eliminar</button></td>' +
                         '</tr>';
 
@@ -224,21 +222,90 @@
                 });
             }
 
+            // Función para formatear valores en pesos colombianos
+            function formatearPesosColombianos(valor) {
+                if (isNaN(valor) || valor === null) {
+                    return '';
+                }
+                return valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            function parsearValorPesosColombianos(valor) {
+                return parseFloat(valor.replace(/\./g, ''));
+            }
+
             // Función para calcular y actualizar los valores de subtotal, IVA y precio total
+            function actualizarValores() {
+                // Convertir valores a formato pesos colombianos
+                $('#subtotal').val(formatearPesosColombianos(parsearValorPesosColombianos($('#subtotal').val())));
+                $('#iva').val(formatearPesosColombianos(parsearValorPesosColombianos($('#iva').val())));
+                $('#descuento').val(formatearPesosColombianos(parsearValorPesosColombianos($('#descuento').val())));
+                $('#precioTotal').val(formatearPesosColombianos(parsearValorPesosColombianos($('#precioTotal').val())));
+            }
+
+            // Función para calcular totales
             function calcularTotales() {
                 var sumaSubtotales = detallesCompra.reduce(function (sum, detalle) {
                     return sum + detalle.Subtotal;
                 }, 0);
 
-                $('#subtotal').val(sumaSubtotales.toFixed(0));
+                $('#subtotal').val(formatearPesosColombianos(sumaSubtotales));
 
                 var iva = sumaSubtotales * 0.19;
-                $('#iva').val(iva.toFixed(0));
+                $('#iva').val(formatearPesosColombianos(iva));
 
-                var descuento = parseFloat($('#descuento').val() || 0);
+                var descuento = parsearValorPesosColombianos($('#descuento').val() || '0');
                 var precioTotal = sumaSubtotales + iva - descuento;
-                $('#precioTotal').val(precioTotal.toFixed(0));
+                $('#precioTotal').val(formatearPesosColombianos(precioTotal));
             }
+
+            // Manejar el cambio en los campos de entrada de precios
+            $('#subtotal, #iva, #descuento, #precioTotal').on('input', function () {
+                $(this).val(formatearPesosColombianos(parsearValorPesosColombianos($(this).val())));
+            });
+
+            // Manejar el cálculo de totales cuando se añade un detalle
+            $('#addDetalleButton').click(function () {
+                addDetallePedido();
+                calcularTotales();
+            });
+
+            // Configurar el campo de fecha de compra
+            function obtenerFechaHoy() {
+                var hoy = new Date();
+                var dia = hoy.getDate();
+                var mes = hoy.getMonth() + 1; // Los meses empiezan en 0
+                var año = hoy.getFullYear();
+
+                if (dia < 10) dia = '0' + dia;
+                if (mes < 10) mes = '0' + mes;
+
+                return año + '-' + mes + '-' + dia;
+            }
+
+            // Función para obtener la fecha de hace 5 días en formato YYYY-MM-DD
+            function obtenerFechaLimite() {
+                var hoy = new Date();
+                hoy.setDate(hoy.getDate() - 5);
+                var dia = hoy.getDate();
+                var mes = hoy.getMonth() + 1; // Los meses empiezan en 0
+                var año = hoy.getFullYear();
+
+                if (dia < 10) dia = '0' + dia;
+                if (mes < 10) mes = '0' + mes;
+
+                return año + '-' + mes + '-' + dia;
+            }
+
+            $(document).ready(function () {
+                var fechaHoy = obtenerFechaHoy();
+                var fechaLimite = obtenerFechaLimite();
+
+                // Configurar los valores min y max para el campo de fecha
+                $('#fechaCompra').attr('max', fechaHoy); // La fecha máxima es hoy
+                $('#fechaCompra').attr('min', fechaLimite); // La fecha mínima es 5 días antes
+                $('#fechaCompra').val(fechaHoy); // Establecer la fecha actual como valor predeterminado
+            });
 
             // Manejar el cambio en el tipo de proveedor
             $('#TipoProveedor').change(function () {
@@ -296,9 +363,6 @@
 
             // Calcular totales al cargar la página
             calcularTotales();
-
-            // Manejar el click en el botón de añadir detalle
-            $('#addDetalleButton').click(addDetallePedido);
         });
     </script>
 }
