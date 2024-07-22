@@ -68,7 +68,9 @@
 </div>
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         // Función para calcular el estado automáticamente al cambiar el stock
@@ -81,38 +83,92 @@
         });
 
         // Escuchar el evento submit del formulario
-        document.querySelector('form').addEventListener('submit', function (event) {
+        document.getElementById("editForm").addEventListener('submit', function (event) {
             event.preventDefault(); // Evitar el envío del formulario por defecto
+
+            // Validar campos vacíos
+            var isValid = true;
+            var errorMessage = "";
+
+            // Validar categoría
+            if (!$("select[name='IdCategoria']").val()) {
+                isValid = false;
+                errorMessage += "La categoría es obligatoria.<br/>";
+            }
+
+            // Validar nombre del insumo
+            if (!$("input[name='NombreInsumo']").val()) {
+                isValid = false;
+                errorMessage += "El nombre del insumo es obligatorio.<br/>";
+            }
+
+            // Validar unidad de medida
+            if (!$("input[name='UnidadMedida']").val()) {
+                isValid = false;
+                errorMessage += "La unidad de medida es obligatoria.<br/>";
+            }
+
+            // Validar descripción
+            if (!$("input[name='Descripcion']").val()) {
+                isValid = false;
+                errorMessage += "La descripción es obligatoria.<br/>";
+            }
+
+            // Validar stock
+            if (!$("input[name='Stock']").val()) {
+                isValid = false;
+                errorMessage += "El stock es obligatorio.<br/>";
+            }
+
+            // Validar precio unitario
+            if (!$("input[name='PrecioUnitario']").val()) {
+                isValid = false;
+                errorMessage += "El precio unitario es obligatorio.<br/>";
+            }
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    html: errorMessage
+                });
+                return;
+            }
 
             // Realizar la petición AJAX para enviar los datos del formulario
             fetch(this.action, {
                 method: this.method,
                 body: new FormData(this)
             })
-            .then(response => {
-                if (response.ok) {
-                    // Mostrar alerta de éxito
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: 'El insumo se ha editado correctamente.'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = '@Url.Action("Index")';
-                        }
-                    });
-                } else {
-                    // Si hay algún error, mostrar mensaje de error
+                .then(response => {
+                    if (response.ok) {
+                        // Mostrar alerta de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'El insumo se ha editado correctamente.'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '@Url.Action("Index")';
+                            }
+                        });
+                    } else {
+                        // Si hay algún error, mostrar mensaje de error
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al editar el insumo.'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
                         title: '¡Error!',
                         text: 'Hubo un problema al editar el insumo.'
                     });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                });
         });
     </script>
 }

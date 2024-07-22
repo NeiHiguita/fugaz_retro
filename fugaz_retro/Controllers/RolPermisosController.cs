@@ -37,6 +37,8 @@ namespace fugaz_retro.Controllers
             var rolPermiso = await _context.RolPermisos
                 .Include(r => r.IdPermisoNavigation)
                 .Include(r => r.IdRolNavigation) // Incluir la navegación al objeto de rol
+                    .ThenInclude(r => r.RolPermisos) // Incluir la navegación a los permisos asociados al rol
+                        .ThenInclude(rp => rp.IdPermisoNavigation) // Incluir la navegación al objeto de permiso
                 .FirstOrDefaultAsync(m => m.IdRolPermiso == id);
 
             if (rolPermiso == null)

@@ -13,108 +13,60 @@
         width: 200px;
     }
 
-    /* Estilo para el toast */
-    .toast {
-        position: fixed;
-        top: 60px;
-        right: 100px;
-        min-width: 250px;
-        background-color: #333;
-        color: #fff;
-        border-radius: 5px;
-        padding: 10px 20px;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-        z-index: 1050;
-    }
-
-        .toast.show {
-            opacity: 1;
-        }
-
     .bsal {
-        margin-left: 30px;
+        margin-left: 60px;
         margin-top: 0px;
         width: 100px;
     }
 </style>
 
-<ul class="navbar-nav" style="margin-right:30px;">
-    @if (User.Identity.IsAuthenticated)
-    {
-        @if (User.Identity.IsAuthenticated && session.GetInt32("IdRol") == 7)
-        {
-            <li class="nav-item">
-                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Mispedidos">Pedidos</a>
-            </li>
-        }
-    }
-    </ul>
-    <ul class="navbar-nav">
-
+<ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
-        <li class="nav-item" style="margin-right:0px; margin-top:8px;">
-            <a title="Manage">@UserManager.GetUserName(User)</a>
-        </li>
-        <li class="nav-item bsal">
-            <button id="logout" type="button" class="nav-link btn btn-sm btn text-dark border-0" onclick="showToast()">
-                <i class="fas fa-sign-out-alt "></i>  Salir
+        <li class="nav-item dropdown">
+            <button class="btn btn-link nav-link dropdown-toggle" style="margin-left: -75px;" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                @UserManager.GetUserName(User)
             </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                @if (User.Identity.IsAuthenticated && session.GetInt32("IdRol") == 7)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Mispedidos">Pedidos</a>
+                    </li>
+                }
+                <li><a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Miperfil">Mi Perfil</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+                        <button type="submit" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </li>
-
     }
     else
     {
         <div class="dropdown">
             <a class="nav-link text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-user-plus"></i> Iniciar sesion
+                <i class="fas fa-user-plus"></i> Iniciar sesión
             </a>
             <ul class="dropdown-menu">
                 <li class="nav-item">
                     <a class="nav-link text-dark" id="register" asp-area="Identity" asp-page="/Account/Register">
-                        <i class="fas fa-user-plus"></i> Registrate!
+                        <i class="fas fa-user-plus"></i> ¡Regístrate!
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-dark" id="login" asp-area="Identity" asp-page="/Account/Login">
-                        <i class="fas fa-user"></i> Inicio de Sesion
+                        <i class="fas fa-user"></i> Inicio de sesión
                     </a>
                 </li>
             </ul>
         </div>
     }
 </ul>
-
-<!-- Toast de confirmación -->
-<div id="confirmationToast" class="toast">
-    <div class="toast-body">
-        <strong>¿Deseas salir?</strong><br>
-        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="confirmLogout()">Sí, cerrar sesión</button>
-        <button type="button" class="btn btn-sm btn-secondary mt-2 ml-2" onclick="hideToast()">Cancelar</button>
-    </div>
-</div>
-
-<!-- Formulario de cierre de sesión -->
-<form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post"></form>
-
-<script>
-    function showToast() {
-        var toast = document.getElementById('confirmationToast');
-        toast.classList.add('show');
-        setTimeout(function () {
-            toast.classList.remove('show');
-        }, 5000); // Ocultar el toast después de 5 segundos
-    }
-
-    function hideToast() {
-        document.getElementById('confirmationToast').classList.remove('show');
-    }
-
-    function confirmLogout() {
-        document.getElementById('logoutForm').submit();
-    }
-</script>

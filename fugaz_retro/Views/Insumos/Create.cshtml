@@ -68,10 +68,11 @@
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <script>
     $(document).ready(function () {
-
+        // Mostrar u ocultar campos según la unidad de medida seleccionada
         $("#unidadMedida").on("change", function () {
             var selectedValue = $(this).val();
             if (selectedValue === "Yardas") {
@@ -81,53 +82,74 @@
             }
         });
 
+        // Inicialmente, ocultar el grupo de cantidad
+        $("#cantidadGroup").hide();
+
+        // Manejo del envío del formulario
         $("#createForm").submit(function (event) {
             event.preventDefault();
+
+            // Validar campos vacíos
+            var isValid = true;
+            var errorMessage = "";
+
+            // Validar categoría
+            if (!$("select[name='IdCategoria']").val()) {
+                isValid = false;
+                errorMessage += "La categoría es obligatoria.<br/>";
+            }
+
+            // Validar nombre del insumo
+            if (!$("input[name='NombreInsumo']").val()) {
+                isValid = false;
+                errorMessage += "El nombre del insumo es obligatorio.<br/>";
+            }
+
+            // Validar unidad de medida
+            if (!$("select[name='UnidadMedida']").val()) {
+                isValid = false;
+                errorMessage += "La unidad de medida es obligatoria.<br/>";
+            }
+
+            // Validar descripción
+            if (!$("input[name='Descripcion']").val()) {
+                isValid = false;
+                errorMessage += "La descripción es obligatoria.<br/>";
+            }
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    html: errorMessage
+                });
+                return;
+            }
+
             var formData = $(this).serialize();
             $.ajax({
                 url: '@Url.Action("Create", "Insumos")',
                 type: 'POST',
                 data: formData,
                 success: function (result) {
-                    window.location.href = '@Url.Action("Index", "Insumos")';
-                },
-                error: function (xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-    });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-<script>
-    document.querySelector('form').addEventListener('submit', function (event) {
-        event.preventDefault(); // Evitar el envío del formulario por defecto
-
-        fetch(this.action, {
-            method: this.method,
-            body: new FormData(this)
-        })
-            .then(response => {
-                if (response.ok) {
                     Swal.fire({
                         icon: 'success',
                         title: '¡Éxito!',
                         text: 'El insumo se ha creado correctamente.'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = '@Url.Action("Index")';
+                            window.location.href = '@Url.Action("Index", "Insumos")';
                         }
                     });
-                } else {
+                },
+                error: function (xhr, status, error) {
                     Swal.fire({
                         icon: 'error',
                         title: '¡Error!',
-                        text: 'Hubo un problema al crear el rol.'
+                        text: 'Hubo un problema al crear el insumo.'
                     });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
             });
+        });
     });
 </script>
