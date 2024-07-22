@@ -185,9 +185,9 @@
                 detallesCompra.forEach(function (detalle, index) {
                     var fila = '<tr>' +
                         '<td>' + detalle.Insumo + '</td>' +
-                        '<td>' + detalle.PrecioUnitario.toFixed(2) + '</td>' +
+                        '<td>' + detalle.PrecioUnitario.toFixed(0) + '</td>' +
                         '<td>' + detalle.Cantidad + '</td>' +
-                        '<td>' + detalle.Subtotal.toFixed(2) + '</td>' +
+                        '<td>' + detalle.Subtotal.toFixed(0) + '</td>' +
                         '<td><button type="button" class="btn btn-danger" onclick="eliminarDetallePedido(' + index + ')">Eliminar</button></td>' +
                         '</tr>';
 
@@ -230,14 +230,14 @@
                     return sum + detalle.Subtotal;
                 }, 0);
 
-                $('#subtotal').val(sumaSubtotales.toFixed(2));
+                $('#subtotal').val(sumaSubtotales.toFixed(0));
 
                 var iva = sumaSubtotales * 0.19;
-                $('#iva').val(iva.toFixed(2));
+                $('#iva').val(iva.toFixed(0));
 
                 var descuento = parseFloat($('#descuento').val() || 0);
-                var precioTotal = sumaSubtotales - descuento;
-                $('#precioTotal').val(precioTotal.toFixed(2));
+                var precioTotal = sumaSubtotales + iva - descuento;
+                $('#precioTotal').val(precioTotal.toFixed(0));
             }
 
             // Manejar el cambio en el tipo de proveedor

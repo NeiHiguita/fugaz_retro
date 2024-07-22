@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fugaz_retro.Controllers
 {
@@ -17,11 +19,15 @@ namespace fugaz_retro.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly FugazContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
 
-        public HomeController(ILogger<HomeController> logger, FugazContext context)
+        public HomeController(ILogger<HomeController> logger, FugazContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
         {
             _logger = logger;
             _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         public IActionResult Index()
@@ -413,13 +419,98 @@ namespace fugaz_retro.Controllers
             // Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true }); // Devolver una respuesta de éxito
+            return Json(new { success = true });
         }
 
         //NOSOTROS
         public ActionResult Nosotros()
         {
             return View();
+        }
+
+        //Miperfil
+        public async Task<IActionResult> Miperfil()
+        {
+            var userEmail = User.Identity.Name;
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == userEmail);
+
+            if (usuario == null)
+            {
+                return NotFound("Usuario no encontrado");
+            }
+
+            var aspNetUser = await _userManager.FindByEmailAsync(userEmail);
+            if (aspNetUser == null)
+            {
+                return NotFound("Usuario de identidad no encontrado");
+            }
+
+            ViewBag.IdUsuario = usuario.IdUsuario;
+            ViewBag.NombreUsuario = usuario.NombreUsuario;
+            ViewBag.Correo = usuario.Correo;
+            ViewBag.Document = usuario.Document;
+            ViewBag.AspNetUserId = aspNetUser.Id;
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Miperfil(int idUsuario, string nombreUsuario, string document)
+        {
+            if (ModelState.IsValid)
+            {
+                var usuario = await _context.Usuarios.FindAsync(idUsuario);
+                if (usuario == null)
+                {
+                    return NotFound("Usuario no encontrado");
+                }
+
+                // Actualizar los datos en la tabla Usuario
+                usuario.NombreUsuario = nombreUsuario;
+                usuario.Document = document;
+                _context.Usuarios.Update(usuario);
+
+                await _context.SaveChangesAsync();
+
+                ViewBag.IdUsuario = usuario.IdUsuario;
+                ViewBag.NombreUsuario = usuario.NombreUsuario;
+                ViewBag.Correo = usuario.Correo;
+                ViewBag.Document = usuario.Document;
+
+                ViewBag.Message = "Perfil actualizado con éxito";
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmNewPassword)
+        {
+            if (newPassword != confirmNewPassword)
+            {
+                ModelState.AddModelError("", "Las contraseñas no coinciden");
+                return RedirectToAction("Miperfil", new { mensaje = "Las contraseñas no coinciden" });
+            }
+
+            var userEmail = User.Identity.Name;
+            var aspNetUser = await _userManager.FindByEmailAsync(userEmail);
+
+            if (aspNetUser == null)
+            {
+                return NotFound("Usuario no encontrado");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(aspNetUser, currentPassword, newPassword);
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Miperfil", new { mensaje = "Contraseña actualizada con éxito" });
+            }
+            else
+            {
+                ModelState.AddModelError("", "Error al cambiar la contraseña");
+                return RedirectToAction("Miperfil", new { mensaje = "Error al cambiar la contraseña" });
+            }
         }
     }
 }
