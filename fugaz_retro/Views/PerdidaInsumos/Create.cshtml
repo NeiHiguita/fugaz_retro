@@ -44,7 +44,81 @@
 </div>
 </div>
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        // Escuchar el evento submit del formulario
+        document.getElementById("createForm").addEventListener('submit', function (event) {
+            event.preventDefault(); // Evitar el envío del formulario por defecto
+
+            // Validar campos vacíos
+            var isValid = true;
+            var errorMessage = "";
+
+            // Validar insumo
+            if (!$("select[name='IdInsumo']").val()) {
+                isValid = false;
+                errorMessage += "El insumo es obligatorio.<br/>";
+            }
+
+            // Validar cantidad
+            if (!$("input[name='Cantidad']").val()) {
+                isValid = false;
+                errorMessage += "La cantidad es obligatoria.<br/>";
+            }
+
+            // Validar fecha
+            if (!$("input[name='Fecha']").val()) {
+                isValid = false;
+                errorMessage += "La fecha es obligatoria.<br/>";
+            }
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    html: errorMessage
+                });
+                return;
+            }
+
+            // Realizar la petición AJAX para enviar los datos del formulario
+            fetch(this.action, {
+                method: this.method,
+                body: new FormData(this)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Mostrar alerta de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'La pérdida de insumo se ha creado correctamente.'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '@Url.Action("Index")';
+                            }
+                        });
+                    } else {
+                        // Si hay algún error, mostrar mensaje de error
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al crear la pérdida de insumo.'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: 'Hubo un problema al crear la pérdida de insumo.'
+                    });
+                });
+        });
+    </script>
 }

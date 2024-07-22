@@ -3,80 +3,80 @@
 @{
     ViewData["Title"] = "Edit/proveedor";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var successMessage = TempData["SuccessMessage"] as string;
+    var errorMessage = TempData["ErrorMessage"] as string;
 }
+
 <div class="tbl">
-<h1>Editar Proveedor</h1>
+    <h1>Editar Proveedor</h1>
 
-<hr/>
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="IdProveedor" />
-            <div class="form-group">
-                <label asp-for="TipoProveedor" class="control-label">Tipo de proveedor</label>
-                <select asp-for="TipoProveedor" class="form-control" id="tipoProveedorSelect" readonly>
-                    <option value="Empresa">Empresa</option>
-                    <option value="Natural">Natural</option>
-                </select>
-                <span asp-validation-for="TipoProveedor" class="text-danger"></span>
-            </div>
+    <hr />
 
-            <div id="camposEmpresa" class="campos-proveedor">
-                <!-- Campos específicos para proveedor de empresa -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success" role="alert">
+            @successMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Edit" id="editForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="IdProveedor" />
                 <div class="form-group">
-                    <label asp-for="Rut" class="control-label"></label>
-                    <input asp-for="Rut" class="form-control" readonly />
-                    <span asp-validation-for="Rut" class="text-danger"></span>
+                    <label asp-for="TipoProveedor" class="control-label">Tipo de proveedor</label>
+                    <select asp-for="TipoProveedor" class="form-control" id="tipoProveedorSelect" readonly>
+                        <option value="Empresa">Empresa</option>
+                        <option value="Natural">Natural</option>
+                    </select>
+                    <span asp-validation-for="TipoProveedor" class="text-danger"></span>
                 </div>
 
-            </div>
+                <div id="camposEmpresa" class="campos-proveedor">
+                    <!-- Campos específicos para proveedor de empresa -->
+                    <div class="form-group">
+                        <label asp-for="Rut" class="control-label"></label>
+                        <input asp-for="Rut" class="form-control" readonly />
+                        <span asp-validation-for="Rut" class="text-danger"></span>
+                    </div>
+                </div>
 
-            <div id="camposNatural" class="campos-proveedor" style="display: none;">
-                <!-- Campos específicos para proveedor de natural -->
+                <div id="camposNatural" class="campos-proveedor" style="display:none;">
+                    <!-- Campos específicos para proveedor natural -->
+                    <div class="form-group">
+                        <label asp-for="Documento" class="control-label"></label>
+                        <input asp-for="Documento" class="form-control" readonly />
+                        <span asp-validation-for="Documento" class="text-danger"></span>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label asp-for="NombreCompleto" class="control-label"></label>
-                    <input asp-for="NombreCompleto" class="form-control" readonly />
-                    <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                    <label asp-for="Telefono" class="control-label"></label>
+                    <input asp-for="Telefono" class="form-control" />
+                    <span asp-validation-for="Telefono" class="text-danger"></span>
                 </div>
+
                 <div class="form-group">
-                    <label asp-for="Documento" class="control-label"></label>
-                    <input asp-for="Documento" class="form-control" readonly />
-                    <span asp-validation-for="Documento" class="text-danger"></span>
+                    <label asp-for="Direccion" class="control-label"></label>
+                    <input asp-for="Direccion" class="form-control" />
+                    <span asp-validation-for="Direccion" class="text-danger"></span>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label asp-for="Telefono" class="control-label"></label>
-                <input asp-for="Telefono" class="form-control" />
-                <span asp-validation-for="Telefono" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Direccion" class="control-label"></label>
-                <input asp-for="Direccion" class="form-control" />
-                <span asp-validation-for="Direccion" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check form-switch">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Estado" /> @Html.DisplayNameFor(model => model.Estado)
-                </label>
-            </div>
-
-                <style>
-                    .form-group-botones {
-                        margin-top: 20px;
-                        margin-right: 10px;
-                    }
-                </style>
-
-                <div class="form-group-botones">
-                    <button type="submit" class="btn btn-success">Guardar</button>
-                    <a asp-action="Index" class="btn btn-secondary">Regresar</a>
+                <div class="form-group">
+                    <input type="submit" value="Guardar" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
                 </div>
-        </form>
-      
+            </form>
+        </div>
     </div>
-</div>
 </div>
 
 @section Scripts {
@@ -84,6 +84,7 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Manejar el cambio del tipo de proveedor
@@ -100,50 +101,72 @@
 
             $("#tipoProveedorSelect").trigger('change');
         });
-    </script>
-    <script>
-        $(document).ready(function () {
-            // Manejar el evento clic del botón de guardar
-            $("#guardarBtn").click(function () {
-                window.location.href = '@Url.Action("Index", "Proveedors")';
-            });
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    <script>
-        // Escuchar el evento submit del formulario
-        document.querySelector('form').addEventListener('submit', function (event) {
-            event.preventDefault(); // Evitar el envío del formulario por defecto
 
-            // Realizar la petición AJAX para enviar los datos del formulario
-            fetch(this.action, {
-                method: this.method,
-                body: new FormData(this)
-            })
-                .then(response => {
-                    if (response.ok) {
-                        // Mostrar alerta de éxito
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Éxito!',
-                            text: 'El proveedor se ha editado correctamente.'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '@Url.Action("Index")';
-                            }
-                        });
-                    } else {
-                        // Si hay algún error, mostrar mensaje de error
+        $(document).ready(function () {
+            // Escuchar el evento submit del formulario
+            $("#editForm").submit(function (event) {
+                event.preventDefault(); // Evitar el envío del formulario por defecto
+
+                // Validar campos vacíos
+                var isValid = true;
+                var errorMessage = "";
+
+                // Validar teléfono
+                if (!$("input[name='Telefono']").val()) {
+                    isValid = false;
+                    errorMessage += "El teléfono es obligatorio.<br/>";
+                }
+
+                // Validar dirección
+                if (!$("input[name='Direccion']").val()) {
+                    isValid = false;
+                    errorMessage += "La dirección es obligatoria.<br/>";
+                }
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos obligatorios',
+                        html: errorMessage
+                    });
+                    return;
+                }
+
+                // Realizar la petición AJAX para enviar los datos del formulario
+                fetch(this.action, {
+                    method: this.method,
+                    body: new FormData(this)
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // Mostrar alerta de éxito
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'El proveedor se ha editado correctamente.'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '@Url.Action("Index")';
+                                }
+                            });
+                        } else {
+                            // Si hay algún error, mostrar mensaje de error
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: 'Hubo un problema al editar el proveedor.'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
                         Swal.fire({
                             icon: 'error',
                             title: '¡Error!',
-                            text: 'Hubo un problema al crear el rol.'
+                            text: 'Hubo un problema al editar el proveedor.'
                         });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                    });
+            });
         });
     </script>
 }

@@ -6,24 +6,23 @@
 }
 
 <div class="tbl">
-<h1>Crear Proveedor</h1>
+    <h1>Crear Proveedor</h1>
 
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create" id="createForm">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="TipoProveedor" class="control-label">Tipo de Proveedor</label>
-                <select asp-for="TipoProveedor" class="form-control" id="tipoProveedorSelect">
-                    <option value="">Selecciona tipo de proveedor</option>
-                    <option value="Jurídico">Jurídico</option>
-                    <option value="Natural">Natural</option>
-                </select>
-                <span asp-validation-for="TipoProveedor" class="text-danger" id="tipoProveedor" ></span>
-            </div>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Create" id="createForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="TipoProveedor" class="control-label">Tipo de Proveedor</label>
+                    <select asp-for="TipoProveedor" class="form-control" id="tipoProveedorSelect" required>
+                        <option value="">Selecciona tipo de proveedor</option>
+                        <option value="Jurídico">Jurídico</option>
+                        <option value="Natural">Natural</option>
+                    </select>
+                    <span asp-validation-for="TipoProveedor" class="text-danger" id="tipoProveedor"></span>
+                </div>
                 <input type="hidden" asp-for="TipoProveedor" id="tipoProveedor" />
-
 
                 <!-- Campos para Natural -->
                 <div id="camposNatural" style="display:none;">
@@ -39,39 +38,39 @@
                     </div>
                     <div id="errorDocumento" class="alert alert-danger" style="display:none;"></div>
                 </div>
-            <!-- Campos para Empresa -->
-            <div id="camposJuridico" style="display:none;">
-                <div class="form-group">
-                      <label asp-for="Empresa" class="control-label">Empresa</label>
-                      <input asp-for="Empresa" class="form-control" />
-                      <span asp-validation-for="Empresa" class="text-danger"></span>
-                </div>
-                <div class="form-group">
+                <!-- Campos para Empresa -->
+                <div id="camposJuridico" style="display:none;">
+                    <div class="form-group">
+                        <label asp-for="Empresa" class="control-label">Empresa</label>
+                        <input asp-for="Empresa" class="form-control" />
+                        <span asp-validation-for="Empresa" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="RepresentanteLegal" class="control-label">Representante legal</label>
                         <input asp-for="RepresentanteLegal" class="form-control" />
                         <span asp-validation-for="RepresentanteLegal" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Rut" class="control-label">Rut</label>
+                        <input asp-for="Rut" class="form-control" />
+                        <span asp-validation-for="Rut" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Telefono" class="control-label">Teléfono</label>
+                    <input asp-for="Telefono" class="form-control" required />
+                    <span asp-validation-for="Telefono" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="Rut" class="control-label">Rut</label>
-                    <input asp-for="Rut" class="form-control" />
-                    <span asp-validation-for="Rut" class="text-danger"></span>
+                    <label asp-for="Direccion" class="control-label">Dirección</label>
+                    <input asp-for="Direccion" class="form-control" required />
+                    <span asp-validation-for="Direccion" class="text-danger"></span>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Telefono" class="control-label">Teléfono</label>
-                <input asp-for="Telefono" class="form-control" />
-                <span asp-validation-for="Telefono" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Direccion" class="control-label">Dirección</label>
-                <input asp-for="Direccion" class="form-control" />
-                <span asp-validation-for="Direccion" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check form-switch">
-                <input class="form-check-input" asp-for="Estado" id="Estado" data-toggle="switch" data-size="large" data-on-color="success" data-off-color="danger" />
-                <label class="form-check-label" for="Estado">@Html.DisplayNameFor(model => model.Estado)</label>
-            </div>
+                <div class="form-group form-check form-switch">
+                    <input class="form-check-input" asp-for="Estado" id="Estado" data-toggle="switch" data-size="large" data-on-color="success" data-off-color="danger" />
+                    <label class="form-check-label" for="Estado">@Html.DisplayNameFor(model => model.Estado)</label>
+                </div>
                 <style>
                     .form-group-botones {
                         margin-top: 20px;
@@ -83,9 +82,9 @@
                     <button type="submit" class="btn btn-success">Crear</button>
                     <a asp-action="Index" class="btn btn-secondary">Regresar</a>
                 </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 </div>
 
 <!--CSS -->
@@ -94,6 +93,7 @@
 @section Scripts {
     <!-- Carga SweetAlert2 desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -106,12 +106,111 @@
                 } else if (tipoProveedor === "Natural") {
                     $("#camposJuridico").hide();
                     $("#camposNatural").show();
+                } else {
+                    $("#camposJuridico").hide();
+                    $("#camposNatural").hide();
                 }
             });
 
             // Inicialmente, ejecutar el cambio para mostrar los campos según el tipo de proveedor seleccionado
             $("#tipoProveedorSelect").change();
-        });
 
+            // Escuchar el evento submit del formulario
+            $("#createForm").submit(function (event) {
+                event.preventDefault(); // Evitar el envío del formulario por defecto
+
+                // Validar campos vacíos
+                var isValid = true;
+                var errorMessage = "";
+
+                // Validar tipo de proveedor
+                if (!$("#tipoProveedorSelect").val()) {
+                    isValid = false;
+                    errorMessage += "El tipo de proveedor es obligatorio.<br/>";
+                }
+
+                // Validar campos según el tipo de proveedor
+                var tipoProveedor = $("#tipoProveedorSelect").val();
+                if (tipoProveedor === "Natural") {
+                    if (!$("input[name='NombreCompleto']").val()) {
+                        isValid = false;
+                        errorMessage += "El nombre completo es obligatorio.<br/>";
+                    }
+                    if (!$("input[name='Documento']").val()) {
+                        isValid = false;
+                        errorMessage += "El documento es obligatorio.<br/>";
+                    }
+                } else if (tipoProveedor === "Jurídico") {
+                    if (!$("input[name='Empresa']").val()) {
+                        isValid = false;
+                        errorMessage += "El nombre de la empresa es obligatorio.<br/>";
+                    }
+                    if (!$("input[name='RepresentanteLegal']").val()) {
+                        isValid = false;
+                        errorMessage += "El representante legal es obligatorio.<br/>";
+                    }
+                    if (!$("input[name='Rut']").val()) {
+                        isValid = false;
+                        errorMessage += "El RUT es obligatorio.<br/>";
+                    }
+                }
+
+                // Validar teléfono
+                if (!$("input[name='Telefono']").val()) {
+                    isValid = false;
+                    errorMessage += "El teléfono es obligatorio.<br/>";
+                }
+
+                // Validar dirección
+                if (!$("input[name='Direccion']").val()) {
+                    isValid = false;
+                    errorMessage += "La dirección es obligatoria.<br/>";
+                }
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos obligatorios',
+                        html: errorMessage
+                    });
+                    return;
+                }
+
+                // Realizar la petición AJAX para enviar los datos del formulario
+                fetch(this.action, {
+                    method: this.method,
+                    body: new FormData(this)
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // Mostrar alerta de éxito
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'El proveedor se ha creado correctamente.'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '@Url.Action("Index")';
+                                }
+                            });
+                        } else {
+                            // Si hay algún error, mostrar mensaje de error
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: 'Hubo un problema al crear el proveedor.'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al crear el proveedor.'
+                        });
+                    });
+            });
+        });
     </script>
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -25,7 +24,7 @@ namespace fugaz_retro.Controllers
         {
             return _context.Proveedors != null ?
                         View(await _context.Proveedors.ToListAsync()) :
-                        Problem("Entity set 'FugazContext.Proveedors'  is null.");
+                        Problem("Entity set 'FugazContext.Proveedors' is null.");
         }
 
         // GET: Proveedors/Details/5
@@ -80,6 +79,7 @@ namespace fugaz_retro.Controllers
 
                 _context.Proveedors.Add(proveedor);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Proveedor creado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -135,6 +135,7 @@ namespace fugaz_retro.Controllers
                 {
                     _context.Update(proveedor);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Proveedor editado exitosamente.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -177,7 +178,7 @@ namespace fugaz_retro.Controllers
         {
             if (_context.Proveedors == null)
             {
-                return Problem("Entity set 'FugazContext.Proveedors'  is null.");
+                return Problem("Entity set 'FugazContext.Proveedors' is null.");
             }
 
             var proveedor = await _context.Proveedors.Include(p => p.Compras).FirstOrDefaultAsync(p => p.IdProveedor == id);
@@ -188,11 +189,13 @@ namespace fugaz_retro.Controllers
 
             if (proveedor.Compras.Any())
             {
-                return BadRequest("El proveedor no se puede eliminar ya que se encuentra asociado a una compra.");
+                TempData["ErrorMessage"] = "El proveedor no se puede eliminar ya que se encuentra asociado a una compra.";
+                return RedirectToAction(nameof(Index));
             }
 
             _context.Proveedors.Remove(proveedor);
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Proveedor eliminado exitosamente.";
             return RedirectToAction(nameof(Index));
         }
 
