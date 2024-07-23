@@ -74,7 +74,7 @@
                 {
                     <tr class="detalleProducto" data-detalle-id="@index">
                         <td>
-                            <input type="hidden" name="DetalleProductos[@index].IdDetalle" value="@detalle.IdDetalleProducto" />
+                            <input type="hidden" name="DetalleProductos[@index].IdDetalleProducto" value="@detalle.IdDetalleProducto" />
                             <input type="text" name="DetalleProductos[@index].Talla" class="form-control" value="@detalle.Talla" />
                         </td>
                         <td>
@@ -89,8 +89,8 @@
 
             </tbody>
         </table>
-
-        <div class="form-group-botones">
+@*         <h4 style="color:darkred;">!Recuerda ingresar nuevamente la foto antes de actualizar el producto¡</h4>
+ *@        <div class="form-group-botones">
             <button type="submit" class="btn btn-success">Guardar</button>
             <a asp-action="Index" class="btn btn-secondary">Regresar</a>
             <button type="button" class="btn btn-primary" id="addDetail">Añadir Detalle</button>

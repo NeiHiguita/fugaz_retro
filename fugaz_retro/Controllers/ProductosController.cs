@@ -130,6 +130,7 @@ namespace fugaz_retro.Controllers
                 {
                     try
                     {
+                        // Mantenemos la foto existente si no se selecciona una nueva
                         if (Foto != null && Foto.Length > 0)
                         {
                             using (var memoryStream = new MemoryStream())
@@ -150,10 +151,12 @@ namespace fugaz_retro.Controllers
                         _context.Update(producto);
                         await _context.SaveChangesAsync();
 
+                        // Eliminar detalles existentes
                         var existingDetalleProductos = _context.DetalleProductos.Where(dp => dp.IdProducto == id).ToList();
                         _context.DetalleProductos.RemoveRange(existingDetalleProductos);
                         await _context.SaveChangesAsync();
 
+                        // Agregar los nuevos detalles
                         foreach (var detalle in DetalleProductos)
                         {
                             detalle.IdProducto = producto.IdProducto;
@@ -175,7 +178,6 @@ namespace fugaz_retro.Controllers
 
             return View(producto);
         }
-
 
         // GET: Producto/Delete/5
         public async Task<IActionResult> Delete(int? id)

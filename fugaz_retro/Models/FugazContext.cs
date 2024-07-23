@@ -287,7 +287,7 @@ public partial class FugazContext : IdentityDbContext
 
             entity.ToTable("Detalle_Producto");
 
-            entity.Property(e => e.IdDetalleProducto).HasColumnName("id_detalle_producto");
+            entity.Property(e => e.IdDetalleProducto).HasColumnName("id_Detalle_producto");
             entity.Property(e => e.IdProducto).HasColumnName("id_producto");
             entity.Property(e => e.Talla).HasColumnName("talla");
             entity.Property(e => e.Color).HasColumnName("color");
