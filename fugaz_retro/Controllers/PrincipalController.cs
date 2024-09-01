@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using fugaz_retro.Models;
 using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fugaz_retro.Controllers
 {
+    [Authorize]
     public class PrincipalController : Controller
     {
         private readonly FugazContext _context;

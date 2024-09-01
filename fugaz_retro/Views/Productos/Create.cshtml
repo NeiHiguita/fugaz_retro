@@ -8,18 +8,17 @@
 <div class="tbl">
     <h1>Crear Producto</h1>
     <hr />
-
     <form asp-controller="Productos" asp-action="Create" method="post" enctype="multipart/form-data">
         <div class="row">
             <div class="col-sm-6">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group">
-                    <label asp-for="NombreProducto" class="control-label"></label>
+                    <label asp-for="NombreProducto" class="control-label">Nombre Producto</label>
                     <input asp-for="NombreProducto" class="form-control" />
                     <span asp-validation-for="NombreProducto" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="PrecioVenta" class="control-label"></label>
+                    <label asp-for="PrecioVenta" class="control-label">Precio venta</label>
                     <input asp-for="PrecioVenta" class="form-control" />
                     <span asp-validation-for="PrecioVenta" class="text-danger"></span>
                 </div>
@@ -40,42 +39,56 @@
                     </select>
                     <span asp-validation-for="CategoriaProducto" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Estado" class="control-label">Estado</label>
-                    <select asp-for="Estado" class="form-control">
-                        <option value="">Seleccionar Estado</option>
-                        <option value="Disponible">Disponible</option>
-                        <option value="No Disponible">No Disponible</option>
-                    </select>
-                    <span asp-validation-for="Estado" class="text-danger"></span>
-                </div>
+
             </div>
-            <div class="col-sm-6">
+            <div class="col-sm-6 primg">
                 <img class="imgproduct" id="FotoPreview" src="#" alt="Comprobante de Pago" />
             </div>
         </div>
         <h4>Detalles del Producto</h4>
-        <table class="table table-striped table-bordered" id="detalleProductosTable">
-            <thead>
-                <tr>
-                    <th>Talla</th>
-                    <th>Color</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <select id="tallaProducto" class="form-control">
-                        </select>
-                    </td>
-                    <td><input type="text" class="form-control" id="colorProducto" /></td>
-                    <td><button type="button" class="btn btn-primary" onclick="addDetalleProducto()">Añadir Detalle</button></td>
-                </tr>
-            </tbody>
-        </table>
-        <div id="detalleProductosHidden">
-            <input type="hidden" id="detalleProductosHiddenInput" name="detalleProductosHiddenInput" />
+        <div class="row">
+            <div class="col-sm-6">
+                <h5>Tallas</h5>
+                <table class="table table-striped table-bordered" id="tallasTable">
+                    <thead>
+                        <tr>
+                            <th>Talla</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select id="tallaProducto" class="form-control"></select>
+                            </td>
+                            <td><button type="button" class="btn btn-primary" onclick="addTalla()">Añadir Talla</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-sm-6">
+                <h5>Colores</h5>
+                <table class="table table-striped table-bordered" id="coloresTable">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="form-control" id="colorProducto" /></td>
+                            <td><button type="button" class="btn btn-primary" onclick="addColor()">Añadir Color</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="tallasHidden">
+            <input type="hidden" id="tallasHiddenInput" name="tallasHiddenInput" />
+        </div>
+        <div id="coloresHidden">
+            <input type="hidden" id="coloresHiddenInput" name="coloresHiddenInput" />
         </div>
         <div class="form-group-botones">
             <button type="submit" class="btn btn-success">Crear</button>
@@ -113,48 +126,82 @@
             $("#categoriaProducto").change(actualizarOpcionesTalla);
         });
 
-        function addDetalleProducto() {
-            var color = $("#colorProducto").val();
+        function addTalla() {
             var talla = $("#tallaProducto").val();
 
-            if (color.trim() === '' && talla.trim() === '') {
-                alert("Por favor ingrese color o talla");
+            if (talla.trim() === '') {
+                alert("Por favor ingrese una talla");
                 return;
             }
 
-            var detalleProductos = JSON.parse($("#detalleProductosHiddenInput").val() || "[]");
+            var tallas = JSON.parse($("#tallasHiddenInput").val() || "[]");
 
-            if (detalleProductos.some(detalle => detalle.Talla === talla)) {
+            if (tallas.some(detalle => detalle.Talla === talla)) {
                 alert("La talla ya ha sido agregada");
                 return;
             }
 
             var detalle = {
-                Talla: talla || '',
-                Color: color || ''
+                Talla: talla,
+                Color: ""
             };
 
-            detalleProductos.push(detalle);
-
-            $("#detalleProductosHiddenInput").val(JSON.stringify(detalleProductos));
+            tallas.push(detalle);
+            $("#tallasHiddenInput").val(JSON.stringify(tallas));
 
             var newRow = $("<tr>");
-            newRow.append("<td>" + (talla || '') + "</td>");
-            newRow.append("<td>" + (color || '') + "</td>");
-            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeDetalleProducto(this)'>Eliminar</button></td>");
+            newRow.append("<td>" + talla + "</td>");
+            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeTalla(this)'>Eliminar</button></td>");
 
-            $("#detalleProductosTable tbody").append(newRow);
-
-            $("#colorProducto").val('');
+            $("#tallasTable tbody").append(newRow);
             $("#tallaProducto").val('');
         }
 
-        function removeDetalleProducto(btn) {
-            var index = $(btn).closest("tr").index() - 1; // Ajuste del índice debido al encabezado de la tabla
-            var detalleProductos = JSON.parse($("#detalleProductosHiddenInput").val() || "[]");
-            detalleProductos.splice(index, 1); // Eliminar el elemento del array
-            $("#detalleProductosHiddenInput").val(JSON.stringify(detalleProductos));
-            $(btn).closest("tr").remove(); // Eliminar la fila de la tabla
+        function removeTalla(btn) {
+            var index = $(btn).closest("tr").index() - 1;
+            var tallas = JSON.parse($("#tallasHiddenInput").val() || "[]");
+            tallas.splice(index, 1);
+            $("#tallasHiddenInput").val(JSON.stringify(tallas));
+            $(btn).closest("tr").remove();
+        }
+
+        function addColor() {
+            var color = $("#colorProducto").val();
+
+            if (color.trim() === '') {
+                alert("Por favor ingrese un color");
+                return;
+            }
+
+            var colores = JSON.parse($("#coloresHiddenInput").val() || "[]");
+
+            if (colores.some(detalle => detalle.Color === color)) {
+                alert("El color ya ha sido agregado");
+                return;
+            }
+
+            var detalle = {
+                Talla: "",
+                Color: color
+            };
+
+            colores.push(detalle);
+            $("#coloresHiddenInput").val(JSON.stringify(colores));
+
+            var newRow = $("<tr>");
+            newRow.append("<td>" + color + "</td>");
+            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeColor(this)'>Eliminar</button></td>");
+
+            $("#coloresTable tbody").append(newRow);
+            $("#colorProducto").val('');
+        }
+
+        function removeColor(btn) {
+            var index = $(btn).closest("tr").index() - 1;
+            var colores = JSON.parse($("#coloresHiddenInput").val() || "[]");
+            colores.splice(index, 1);
+            $("#coloresHiddenInput").val(JSON.stringify(colores));
+            $(btn).closest("tr").remove();
         }
 
         $('input[type="file"]').change(function (e) {

@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Ventas")]
+
     public class DetallePedidosController : Controller
     {
         private readonly FugazContext _context;

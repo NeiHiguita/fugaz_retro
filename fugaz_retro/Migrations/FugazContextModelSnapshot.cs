@@ -266,12 +266,7 @@ namespace fugaz_retro.Migrations
                         .HasColumnType("varchar(40)")
                         .HasColumnName("ciudad");
 
-                    b.Property<string>("Direccion")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(40)")
-                        .HasColumnName("direccion");
+                   
 
                     b.Property<string>("Documento")
                         .IsRequired()

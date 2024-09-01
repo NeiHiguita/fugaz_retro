@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
-
+    [PermisosFilter("Modulo Configuracion")]
     public class PermisosController : Controller
     {
         private readonly FugazContext _context;
@@ -160,21 +160,6 @@ namespace fugaz_retro.Controllers
         private bool PermisoExists(int id)
         {
           return (_context.Permisos?.Any(e => e.IdPermiso == id)).GetValueOrDefault();
-        }
-        [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int id, bool estado)
-        {
-            var permiso = await _context.Permisos.FindAsync(id);
-            if (permiso == null)
-            {
-                return NotFound();
-            }
-
-            permiso.EstadoPermiso = estado;
-            _context.Update(permiso);
-            await _context.SaveChangesAsync();
-
-            return Ok(); // Indica que la operación se realizó correctamente
         }
 
     }

@@ -5,7 +5,6 @@
 }
 
 <style>
-    /* Estilos personalizados */
     body {
         overflow: hidden;
         font-family: Arial, sans-serif;
@@ -18,16 +17,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height:100vh;
+        height: 100vh;
     }
 
     #register-container {
         display: flex;
-        justify-content: space-between; /* Espacio entre la imagen y el formulario */
+        justify-content: space-between;
         align-items: center;
         width: 80%;
         margin-top: -90px;
-        margin-right: 200px; /* Aumenta este valor para más espacio a la derecha del formulario */
+        margin-right: 200px;
         background-color: #f9f9f9;
         padding: 30px;
         border-radius: 10px;
@@ -41,22 +40,22 @@
         }
 
         #register-container .form-group {
-            margin-bottom: 8px; /* Reduce el espacio entre los campos */
+            margin-bottom: 8px; 
         }
 
         #register-container label {
             color: #333;
             display: block;
-            margin-bottom: 3px; /* Reduce el espacio debajo de los labels */
-            font-size: 12px; /* Reduce el tamaño de la fuente de los labels */
+            margin-bottom: 3px; 
+            font-size: 12px; 
         }
 
         #register-container input[type="text"],
         #register-container input[type="password"],
         #register-container input[type="email"] {
             width: 100%;
-            padding: 8px; /* Reduce el padding de los campos */
-            font-size: 12px; /* Ajusta el tamaño de la fuente aquí */
+            padding: 8px;
+            font-size: 12px; 
             border: 1px solid #ccc;
             border-radius: 5px;
         }
@@ -68,7 +67,7 @@
 
             #register-container .form-group.inline-group > div {
                 flex: 1;
-                margin-right: 10px; /* Espacio entre las columnas */
+                margin-right: 10px;
             }
 
                 #register-container .form-group.inline-group > div:last-child {
@@ -100,8 +99,8 @@
             }
 
     .image-container {
-        flex: 1; /* El contenedor de la imagen ocupa todo el espacio disponible */
-        margin-left: 60px; /* Aumenta este valor para mover más la imagen hacia la derecha */
+        flex: 1;
+        margin-left: 60px;
     }
 
         .image-container img {
@@ -111,18 +110,17 @@
         }
 
     .btn-custom {
-        background-color: #442024; /* Cambia el color de fondo del botón */
-        color: #ffffff; /* Cambia el color del texto del botón */
-        border: none; /* Elimina el borde del botón si lo deseas */
-        border-radius: 5px; /* Aplica bordes redondeados al botón */
-        padding: 10px 20px; /* Ajusta el espaciado interno del botón */
-        font-size: 18px; /* Tamaño de la fuente del texto del botón */
-        cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+        background-color: #442024; 
+        color: #ffffff;
+        border: none; 
+        border-radius: 5px; 
+        padding: 10px 20px; 
+        font-size: 18px;
+        cursor: pointer;
     }
 
-        /* Estilos adicionales para el botón al pasar el cursor sobre él */
         .btn-custom:hover {
-            background-color: #874e4c; /* Cambia el color de fondo al pasar el cursor sobre el botón */
+            background-color: #874e4c;
         }
 
     .password-container {
@@ -131,8 +129,8 @@
     }
 
         .password-container input {
-            width: calc(100% - 30px); /* Ajusta el ancho del campo de entrada */
-            padding-right: 30px; /* Espacio para el ícono */
+            width: calc(100% - 30px);
+            padding-right: 30px;
         }
 
     .toggle-password {
@@ -154,24 +152,26 @@
 
             <div class="form-group">
                 <label asp-for="Input.UserName">Nombre de usuario</label>
-                <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Nombre de usuario" />
+                <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Nombre de usuario" maxlength="40" />
                 <span asp-validation-for="Input.UserName" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Input.Email">Correo</label>
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" maxlength="40"/>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Input.Document">Documento</label>
-                <input asp-for="Input.Document" class="form-control" autocomplete="document" aria-required="true" placeholder="Documento" />
+                <input asp-for="Input.Document" class="form-control" autocomplete="document" aria-required="true" placeholder="Documento" maxlength="10"
+                       type="text"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
                 <span asp-validation-for="Input.Document" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Input.Telefono">Telefono</label>
-                <input asp-for="Input.Telefono" class="form-control" autocomplete="Telefono" aria-required="true" placeholder="Telefono" />
+                <input asp-for="Input.Telefono" class="form-control" autocomplete="Telefono" aria-required="true" placeholder="Telefono" maxlength="10"/>
                 <span asp-validation-for="Input.Telefono" class="text-danger"></span>
             </div>
 
@@ -179,7 +179,7 @@
                 <div>
                     <label asp-for="Input.Password">Contraseña</label>
                     <div class="password-container">
-                        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Contraseña" />
+                        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Contraseña" maxlength="15" />
                         <span class="toggle-password">
                             <i class="fa fa-eye"></i>
                         </span>
@@ -189,7 +189,7 @@
                 <div>
                     <label asp-for="Input.ConfirmPassword">Confirmar Contraseña</label>
                     <div class="password-container">
-                        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Confirmar Contraseña" />
+                        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Confirmar Contraseña" maxlength="15" />
                         <span class="toggle-password">
                             <i class="fa fa-eye"></i>
                         </span>
@@ -200,7 +200,7 @@
 
 
             <button id="registerSubmit" type="submit" class="btn btn-custom">Registrar</button>
-            
+
             <div class="form-group">
                 <br />
                 <h6>¿Ya tienes una cuenta? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Inicia sesión</a></h6>
@@ -212,22 +212,116 @@
         </div>
     </div>
 </div>
+<style>
+    .input-group {
+        display: flex;
+        gap: 5px; /* Espacio entre los inputs */
+    }
+
+        .input-group input {
+            width: 3ch; /* Ajusta el ancho del input según sea necesario */
+            text-align: center; /* Centra el texto dentro del input */
+        }
+
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centra el contenido horizontalmente */
+    }
+
+        .form-container img {
+            margin: 0 auto; /* Centra la imagen */
+        }
+
+    .submit-btn-container {
+        text-align: center;
+    }
+
+    .imp{
+        position:relative;
+        margin-top:-160px;
+        margin-left:240px;
+    }
+</style>
+<!-- Modal para la verificación matemática -->
+<div class="modal fade" id="mathVerificationModal" tabindex="-1" role="dialog" aria-labelledby="mathVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mathVerificationModalLabel">Verificación</h5>
+            </div
+            <div class="row">
+            <div class="col-md-6">
+                <div class="modal-body">
+                    <p>Resuelve la siguiente operación para continuar:</p>
+                    <p id="mathOperation"></p>
+                    <input type="number" id="mathResult" class="form-control" placeholder="Ingrese el resultado">
+                    <span id="mathError" class="text-danger" style="display:none;">Resultado incorrecto. Inténtalo de nuevo.</span>
+                </div>
+             </div>
+            <div class="col-md-6 form-container imp">
+                 <img src="/Images/Images/codificacion.gif" alt="Configuración" style="padding:5px; margin-top: -5px;" height="200px" />
+            </div>
+            <div class="modal-footer submit-btn-container">
+                    <button type="button" id="verifyMath" class="btn btn-primary">Verificar</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
-        document.querySelectorAll('.toggle-password').forEach(item => {
-            item.addEventListener('click', function () {
-                let input = this.previousElementSibling;
-                if (input.type === "password") {
-                    input.type = "text";
-                    this.innerHTML = '<i class="fa fa-eye-slash"></i>';
-                } else {
-                    input.type = "password";
-                    this.innerHTML = '<i class="fa fa-eye"></i>';
-                }
+        let correctAnswer;
+
+        // Evento para mostrar el modal de verificación matemática
+        document.getElementById('registerSubmit').addEventListener('click', function (event) {
+            event.preventDefault();
+            // Generar operación matemática y mostrar la modal
+            generateMathOperation();
+            $('#mathVerificationModal').modal('show');
+        });
+
+        // Genera una operación matemática aleatoria
+        function generateMathOperation() {
+            const num1 = Math.floor(Math.random() * 10) + 1;
+            const num2 = Math.floor(Math.random() * 10) + 1;
+            const operations = ['+', '-'];
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+
+            // Asegurar que no haya resultados negativos
+            if (operation === '-' && num1 < num2) {
+                correctAnswer = num2 - num1;
+                document.getElementById('mathOperation').textContent = `${num2} - ${num1}`;
+            } else {
+                correctAnswer = operation === '+' ? num1 + num2 : num1 - num2;
+                document.getElementById('mathOperation').textContent = `${num1} ${operation} ${num2}`;
+            }
+        }
+
+        // Verifica si el resultado ingresado es correcto
+        document.getElementById('verifyMath').addEventListener('click', function () {
+            const userAnswer = parseInt(document.getElementById('mathResult').value, 10);
+            if (userAnswer === correctAnswer) {
+                $('#mathVerificationModal').modal('hide');
+                document.getElementById('register-form').submit();
+            } else {
+                document.getElementById('mathError').style.display = 'block';
+            }
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                var passwordInput = this.previousElementSibling;
+                var type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
             });
         });
+
     </script>
 }

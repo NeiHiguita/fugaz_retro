@@ -12,16 +12,11 @@
         <hr />
         <dl class="row">
             <dt class="col-sm-2">Fecha de Compra</dt>
-            <dd class="col-sm-10">@Html.DisplayFor(model => model.FechaCompra)</dd>
+            <dd class="col-sm-10">@Model.FechaCompra.ToString("dd-MM-yyyy")</dd>
 
-            <dt class="col-sm-2">Método de Pago</dt>
-            <dd class="col-sm-10">@Html.DisplayFor(model => model.MetodoPago)</dd>
 
             <dt class="col-sm-2">Subtotal</dt>
             <dd class="col-sm-10">@Html.DisplayFor(model => model.Subtotal)</dd>
-
-            <dt class="col-sm-2">IVA</dt>
-            <dd class="col-sm-10">@Html.DisplayFor(model => model.Iva)</dd>
 
             <dt class="col-sm-2">Descuento</dt>
             <dd class="col-sm-10">@Html.DisplayFor(model => model.Descuento)</dd>
@@ -62,8 +57,8 @@
                         </td>
                         <td>@detalle.Cantidad</td>
                         <td>@detalle.IdInsumoNavigation.PrecioUnitario</td> <!-- Acceder al precio unitario del insumo -->
-                        <td>@(detalle.Cantidad * detalle.IdInsumoNavigation.PrecioUnitario)</td> <!-- Calcular el subtotal -->
-                    </tr>
+                   @*      <td>(detalle.Cantidad * detalle.IdInsumoNavigation.PrecioUnitario)</td> <!-- Calcular el subtotal -->
+                    *@ </tr>
                 }
             </tbody> <!-- Coloca el cierre de tbody aquí -->
         </table>

@@ -1,10 +1,10 @@
 using fugaz_retro.Models;
+using fugaz_retro.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
 using System.Globalization;
 using Pomelo.EntityFrameworkCore.MySql;
-using System.Configuration.Provider;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,41 +19,55 @@ builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
 
 builder.Services.AddControllersWithViews()
     .AddDataAnnotationsLocalization()
-    .AddViewLocalization();
+    .AddViewLocalization()
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    });
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    var supportedCultures = new[] { new CultureInfo("es-ES") };
-    options.DefaultRequestCulture = new RequestCulture("es-ES");
+    var supportedCultures = new[] { new CultureInfo("es-CO") };
+    options.DefaultRequestCulture = new RequestCulture("es-CO");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
+
+    // Configuración para que el separador decimal sea el punto y la coma sea el separador de miles
+    options.RequestCultureProviders.Clear();
+    options.RequestCultureProviders.Add(new CustomRequestCultureProvider(context =>
+    {
+        var defaultCulture = new CultureInfo("es-CO");
+        defaultCulture.NumberFormat.CurrencyDecimalSeparator = ".";
+        defaultCulture.NumberFormat.CurrencyGroupSeparator = ",";
+        defaultCulture.NumberFormat.NumberDecimalSeparator = ".";
+        defaultCulture.NumberFormat.NumberGroupSeparator = ",";
+        return Task.FromResult(new ProviderCultureResult("es-CO"));
+    }));
 });
 
-// Agregar DbContext y Identity
 builder.Services.AddDbContext<FugazContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("conexion"), new MySqlServerVersion(new Version(5, 7))));
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<FugazContext>();
 
-
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
+
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseRequestLocalization(); // Añadir esta línea para configurar la localización
+app.UseRequestLocalization(); 
 
 app.UseSession();
 
-app.UseAuthorization();
 app.UseAuthorization();
 
 app.MapControllerRoute(

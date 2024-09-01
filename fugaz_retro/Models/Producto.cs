@@ -14,7 +14,7 @@ namespace fugaz_retro.Models
         public double PrecioVenta { get; set; }
         public string CategoriaProducto { get; set; } = null!;
         public byte[]? Foto { get; set; }
-        public string Estado { get; set; }
+        //public Producto? IdProductoNavigation { get; set; }
         public virtual ICollection<DetalleProducto> DetalleProductos { get; set; }
     }
 }

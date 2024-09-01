@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fugaz_retro.Controllers
 {
+    [Authorize]
+    [PermisosFilter("Modulo Compras")]
     public class DetalleComprasController : Controller
     {
         private readonly FugazContext _context;
@@ -35,30 +38,67 @@ namespace fugaz_retro.Controllers
             return View();
         }
 
-        // POST: DetalleCompras/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdDetalleCompra,IdCompra,IdInsumo,Cantidad")] DetalleCompra detalleCompra)
+        public async Task<IActionResult> Create(Compra compra, List<DetalleCompra> detallesCompra)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(detalleCompra);
-                await _context.SaveChangesAsync();
-
-                // Actualizar el stock en la tabla de Insumo
-                var insumo = await _context.Insumos.FindAsync(detalleCompra.IdInsumo);
-                if (insumo != null)
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    insumo.Stock += detalleCompra.Cantidad;
-                    await _context.SaveChangesAsync();
-                }
+                    try
+                    {
+                        _context.Compras.Add(compra);
+                        await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                        foreach (var detalle in detallesCompra)
+                        {
+                            detalle.IdCompra = compra.IdCompra;
+
+                            detalle.Cantidad = detalle.Cantidad;
+
+                            // Log para verificar los valores antes de guardar
+                            Console.WriteLine($"Cantidad ajustada: {detalle.Cantidad}");
+                            Console.WriteLine($"PrecioUnitario recibido: {detalle.PrecioUnitario}");
+
+                            _context.DetalleCompras.Add(detalle);
+
+                            // Actualizar el stock del insumo
+                            var insumo = await _context.Insumos.FindAsync(detalle.IdInsumo);
+                            if (insumo != null)
+                            {
+                                insumo.Stock += detalle.Cantidad;
+                                insumo.PrecioUnitario = detalle.PrecioUnitario;
+                                insumo.Estado = insumo.Stock > 3 ? "Disponible" : "Agotado";
+
+                                _context.Insumos.Update(insumo);
+                            }
+                        }
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        return RedirectToAction(nameof(Index));
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        var innerExceptionMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                        ModelState.AddModelError("", $"Error al crear la compra. Detalles del error: {innerExceptionMessage}");
+                    }
+                }
             }
-            ViewData["IdCompra"] = new SelectList(_context.Compras, "IdCompra", "FechaCompra", detalleCompra.IdCompra);
-            ViewData["IdInsumo"] = new SelectList(_context.Insumos, "IdInsumo", "NombreInsumo", detalleCompra.IdInsumo);
-            return View(detalleCompra);
+            else
+            {
+                ModelState.AddModelError("", "ModelState no es válido.");
+            }
+
+            ViewBag.Proveedores = _context.Proveedors.ToList(); // Cargar todos los proveedores
+            ViewBag.Insumos = _context.Insumos.ToList(); // Cargar todos los insumos
+
+            return View(compra);
         }
+
 
         // POST: DetalleCompras/Delete/5
         [HttpPost, ActionName("Delete")]
@@ -86,7 +126,7 @@ namespace fugaz_retro.Controllers
 
         private bool DetalleCompraExists(int id)
         {
-            return (_context.DetalleCompras?.Any(e => e.IdDetalleCompra == id)).GetValueOrDefault();
+            return _context.DetalleCompras.Any(e => e.IdDetalleCompra == id);
         }
     }
 }

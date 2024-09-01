@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-
+using System.Globalization;
 
 namespace fugaz_retro.Controllers
 {
@@ -24,223 +22,127 @@ namespace fugaz_retro.Controllers
         // GET: Compras
         public IActionResult Index()
         {
-            var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.Preserve // Preservar referencias
-            };
-
             var compras = _context.Compras
-                .Include(c => c.IdProveedorNavigation)
+                .Include(c => c.DetalleCompras) // Incluir los detalles de la compra
+                    .ThenInclude(dc => dc.IdInsumoNavigation) // Incluir la relación con Insumo para obtener los nombres
+                .Include(c => c.IdProveedorNavigation) // Incluir la relación con el proveedor si es necesario
                 .ToList();
-
-            // Serializar objetos compras con referencias preservadas
-            var comprasJson = JsonSerializer.Serialize(compras, options);
-
-            ViewData["ComprasJson"] = comprasJson;
 
             return View(compras);
         }
 
 
         // GET: Compras/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var compra = await _context.Compras
-                .Include(c => c.IdProveedorNavigation)
-                .Include(c => c.DetalleCompras) // Incluir los detalles de compra
-                    .ThenInclude(dc => dc.IdInsumoNavigation) // Incluir la información del insumo
-                .FirstOrDefaultAsync(m => m.IdCompra == id);
+            var compra = _context.Compras
+                .Include(c => c.DetalleCompras)
+                .ThenInclude(dc => dc.IdInsumoNavigation)
+                .Include(c => c.IdProveedorNavigation) // Incluir la información del proveedor
+                .FirstOrDefault(c => c.IdCompra == id);
 
             if (compra == null)
             {
                 return NotFound();
             }
 
-            return View(compra);
+            var nombreProveedor = compra.IdProveedorNavigation.TipoProveedor == "Natural"
+                ? compra.IdProveedorNavigation.NombreCompleto
+                : compra.IdProveedorNavigation.Empresa;
+
+            var detalles = compra.DetalleCompras.Select(dc => new
+            {
+                nombreInsumo = dc.IdInsumoNavigation.NombreInsumo,
+                cantidad = dc.Cantidad,
+                precioUnitario = dc.PrecioUnitario,
+                total = dc.Cantidad * dc.PrecioUnitario
+            }).ToList();
+
+            var result = new
+            {
+                fechaCompra = compra.FechaCompra.ToString("dd-MM-yyyy"),
+                tipoProveedor = compra.IdProveedorNavigation.TipoProveedor,
+                nombreProveedor = nombreProveedor,
+                detalles = detalles
+            };
+
+            return Json(result);
         }
+
 
 
         // GET: Compras/Create
-
         public IActionResult Create()
         {
-            ViewBag.Proveedores = _context.Proveedors.ToList(); // Cargar todos los proveedores
-            ViewBag.Insumos = _context.Insumos.ToList(); // Cargar todos los insumos
-            return View();
+            ViewBag.Proveedores = _context.Proveedors.ToList();
+            ViewBag.Insumos = _context.Insumos.ToList();
+
+            var model = new Compra
+            {
+                DetalleCompras = new List<DetalleCompra>()
+            };
+
+            return View(model);
         }
-
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Compra compra, List<DetalleCompra> detallesCompra)
+        public async Task<IActionResult> Create(Compra compra)
         {
             if (ModelState.IsValid)
             {
-                using (var transaction = await _context.Database.BeginTransactionAsync())
+                try
                 {
-                    try
+                    // Agregar la compra
+                    _context.Compras.Add(compra);
+                    await _context.SaveChangesAsync();
+
+
+                    foreach (var detalle in compra.DetalleCompras)
                     {
-                        _context.Compras.Add(compra);
-                        await _context.SaveChangesAsync();
-
-                        foreach (var detalle in detallesCompra)
+                        if (double.TryParse(detalle.Cantidad.ToString(), out double cantidad))
                         {
-                            detalle.IdCompra = compra.IdCompra;
-                            _context.DetalleCompras.Add(detalle);
-
-                            // Actualizar el stock del insumo
+                            detalle.Cantidad = cantidad;
                             var insumo = await _context.Insumos.FindAsync(detalle.IdInsumo);
                             if (insumo != null)
                             {
-                                insumo.Stock += detalle.Cantidad; // Incrementar el stock del insumo
-                                insumo.PrecioUnitario = detalle.PrecioUnitario; // Actualizar el precio unitario del insumo
-                                // Actualizar el estado del insumo según el stock
+                                insumo.Stock += detalle.Cantidad;
+                                insumo.PrecioUnitario = detalle.PrecioUnitario;
                                 insumo.Estado = insumo.Stock > 3 ? "Disponible" : "Agotado";
 
                                 _context.Insumos.Update(insumo);
                             }
                         }
+                        else
+                        {
+                            ModelState.AddModelError(string.Empty, "El valor ingresado para la cantidad no es válido.");
+                            ViewBag.Proveedores = _context.Proveedors.ToList();
+                            ViewBag.Insumos = _context.Insumos.ToList();
+                            return View(compra);
+                        }
 
-                        await _context.SaveChangesAsync();
-                        await transaction.CommitAsync();
+                        detalle.IdCompra = compra.IdCompra;
+                        _context.DetalleCompras.Add(detalle);
+                    }
+                    await _context.SaveChangesAsync(); //Detalles 
+                    return RedirectToAction(nameof(Index));
+                
 
-                        return RedirectToAction(nameof(Index));
-                    }
-                    catch (Exception ex)
-                    {
-                        await transaction.RollbackAsync();
-                        var innerExceptionMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                        ModelState.AddModelError("", $"Error al crear la compra. Detalles del error: {innerExceptionMessage}");
-                    }
                 }
-            }
-            else
-            {
-                ModelState.AddModelError("", "ModelState no es válido.");
-            }
-
-            // Re-load view data if the model state is invalid
-            // Aquí puedes cargar nuevamente los datos necesarios para la vista, si es necesario
-
-            return View(compra);
-        }
-
-
-        public ActionResult GetProveedoresPorTipo(string tipoProveedor)
-        {
-            List<Proveedor> proveedores = new List<Proveedor>();
-
-            if (tipoProveedor == "Natural")
-            {
-                proveedores = _context.Proveedors.Where(p => !string.IsNullOrEmpty(p.NombreCompleto)).ToList();
-            }
-            else if (tipoProveedor == "Juridico")
-            {
-                proveedores = _context.Proveedors.Where(p => !string.IsNullOrEmpty(p.RepresentanteLegal)).ToList();
-            }
-
-            return Json(proveedores); // Devolver la lista de proveedores en formato JSON
-        }
-
-
-
-
-        // GET: Compras/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Compras == null)
-            {
-                return NotFound();
-            }
-
-            var compra = await _context.Compras.FindAsync(id);
-            if (compra == null)
-            {
-                return NotFound();
-            }
-            ViewData["IdProveedor"] = new SelectList(_context.Proveedors, "IdProveedor", "TipoProveedor", compra.IdProveedor);
-            return View(compra);
-        }
-
-        // POST: Compras/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdCompra,IdUsuario,IdProveedor,FechaCompra,MetodoPago,Subtotal,Iva,Descuento,PrecioTotal")] Compra compra)
-        {
-            if (id != compra.IdCompra)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+                catch (Exception ex)
                 {
-                    _context.Update(compra);
-                    await _context.SaveChangesAsync();
+                    ModelState.AddModelError(string.Empty, "Ocurrió un error al crear la compra: " + ex.Message);
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CompraExists(compra.IdCompra))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
             }
-            ViewData["IdProveedor"] = new SelectList(_context.Proveedors, "IdProveedor", "IdProveedor", compra.IdProveedor);
+
+            ViewBag.Proveedores = _context.Proveedors.ToList();
+            ViewBag.Insumos = _context.Insumos.ToList();
             return View(compra);
         }
 
-        // GET: Compras/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Compras == null)
-            {
-                return NotFound();
-            }
 
-            var compra = await _context.Compras
-                .Include(c => c.IdProveedorNavigation)
-                .FirstOrDefaultAsync(m => m.IdCompra == id);
-            if (compra == null)
-            {
-                return NotFound();
-            }
 
-            return View(compra);
-        }
 
-        // POST: Compras/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Compras == null)
-            {
-                return Problem("Entity set 'FugazContext.Compras'  is null.");
-            }
-            var compra = await _context.Compras.FindAsync(id);
-            if (compra != null)
-            {
-                _context.Compras.Remove(compra);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index)); 
-        }
 
         private bool CompraExists(int id)
         {

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Compras")]
     public class InsumosController : Controller
     {
         private readonly FugazContext _context;
@@ -28,51 +29,82 @@ namespace fugaz_retro.Controllers
         }
 
         // GET: Insumos/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int id)
         {
-            if (id == null || _context.Insumos == null)
-            {
-                return NotFound();
-            }
+            var insumo = _context.Insumos
+                .Include(i => i.IdCategoriaNavigation) // Asegúrate de incluir las propiedades de navegación necesarias
+                .FirstOrDefault(i => i.IdInsumo == id);
 
-            var insumo = await _context.Insumos
-                .Include(i => i.IdCategoriaNavigation)
-                .FirstOrDefaultAsync(m => m.IdInsumo == id);
             if (insumo == null)
             {
                 return NotFound();
             }
 
-            return View(insumo);
+            // Retorna los datos en formato JSON
+            return Json(new
+            {
+                nombreInsumo = insumo.NombreInsumo,
+                idCategoriaNavigation = insumo.IdCategoriaNavigation?.NombreCategoria,
+                categoriaInsumo = insumo.CategoriaInsumo,
+                stock = insumo.Stock,
+                estado = insumo.Stock > 3 ? "Disponible" : "Agotado",
+                precioUnitario = insumo.PrecioUnitario
+            });
         }
+
+
 
         // GET: Insumos/Create
         public IActionResult Create()
         {
-            ViewBag.Categorias = new SelectList(_context.CategoriaInsumos, "IdCategoria", "NombreCategoria");
+            // Obtener solo las categorías activas
+            var categoriasActivas = _context.CategoriaInsumos
+                .Where(c => c.EstadoCategoria) // Filtra las categorías que están activas
+                .ToList();
+
+            // Cargar las categorías activas en el ViewBag
+            ViewBag.Categorias = new SelectList(categoriasActivas, "IdCategoria", "NombreCategoria");
+
             return View();
         }
 
+        // POST: Insumos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdInsumo,IdCategoria,NombreInsumo,UnidadMedida,Descripcion")] Insumo insumo)
+        public async Task<IActionResult> Create([Bind("IdInsumo,IdCategoria,CategoriaInsumo,NombreInsumo,UnidadMedida,Descripcion,Cantidad")] Insumo insumo)
         {
-            if (ModelState.IsValid)
+            try
             {
-                insumo.Stock = 0; // Establecer el stock a 0
-                insumo.Estado = "Agotado"; // Establecer el estado como no disponible
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                                           .SelectMany(v => v.Errors)
+                                           .Select(e => e.ErrorMessage)
+                                           .ToList();
+
+                    return Json(new { success = false, errors = errors });
+                }
+
+                // Set default values
+                insumo.Stock = 0;
+                insumo.Estado = "Agotado";
                 insumo.PrecioUnitario = 0;
 
                 _context.Add(insumo);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+
+                return Json(new { success = true });
             }
-            // Si hay errores de validación, asegúrate de volver a llenar ViewBag para mantener las opciones de categorías en el formulario
-            ViewBag.Categorias = new SelectList(_context.CategoriaInsumos, "IdCategoria", "NombreCategoria", insumo.IdCategoria);
-            return View(insumo);
+            catch (Exception ex)
+            {
+                // Log the exception (consider using a logging framework)
+                Console.WriteLine($"Error: {ex.Message}");
+                return Json(new { success = false, errors = new List<string> { "There was an error processing your request." } });
+            }
         }
 
-        // GET: Insumos/Edit/5
+
+        // GET: Insumo/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Insumos == null)
@@ -89,37 +121,48 @@ namespace fugaz_retro.Controllers
             return View(insumo);
         }
 
+        // POST: Insumo/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdInsumo,IdCategoria,NombreInsumo,UnidadMedida,Cantidad,Descripcion,Stock,PrecioUnitario,Estado")] Insumo insumo)
+        public async Task<IActionResult> Edit(int id, [Bind("IdInsumo,NombreInsumo,Descripcion")] Insumo insumo)
         {
             if (id != insumo.IdInsumo)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            // Recuperar el insumo original de la base de datos
+            var originalInsumo = await _context.Insumos.FindAsync(id);
+
+            if (originalInsumo == null)
             {
-                try
-                {
-                    _context.Update(insumo);
-                    await _context.SaveChangesAsync(); // Guardar cambios en la base de datos
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!InsumoExists(insumo.IdInsumo))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            ViewBag.Categorias = new SelectList(_context.CategoriaInsumos, "IdCategoria", "NombreCategoria", insumo.IdCategoria);
-            return View(insumo);
+
+            // Actualizar solo los campos editables
+            originalInsumo.NombreInsumo = insumo.NombreInsumo;
+            originalInsumo.Descripcion = insumo.Descripcion;
+
+            try
+            {
+                _context.Update(originalInsumo);
+                await _context.SaveChangesAsync();
+
+                // Retornar un JSON indicando éxito
+                return Json(new { success = true });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!InsumoExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    // Manejar cualquier otro error en la actualización
+                    throw;
+                }
+            }
         }
 
         // Método separado para actualizar el stock y el estado automáticamente
@@ -167,44 +210,6 @@ namespace fugaz_retro.Controllers
             {
                 insumo.Estado = "Agotado";
             }
-        }
-
-        // GET: Insumos/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Insumos == null)
-            {
-                return NotFound();
-            }
-
-            var insumo = await _context.Insumos
-                .Include(i => i.IdCategoriaNavigation)
-                .FirstOrDefaultAsync(m => m.IdInsumo == id);
-            if (insumo == null)
-            {
-                return NotFound();
-            }
-
-            return View(insumo);
-        }
-
-        // POST: Insumos/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Insumos == null)
-            {
-                return Problem("Entity set 'FugazContext.Insumos'  is null.");
-            }
-            var insumo = await _context.Insumos.FindAsync(id);
-            if (insumo != null)
-            {
-                _context.Insumos.Remove(insumo);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
         private bool InsumoExists(int id)
         {

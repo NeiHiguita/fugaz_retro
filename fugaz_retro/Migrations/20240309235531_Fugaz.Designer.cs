@@ -678,12 +678,7 @@ namespace fugaz_retro.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdProveedor"));
 
-                    b.Property<string>("Direccion")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("direccion");
+                   
 
                     b.Property<string>("Documento")
                         .HasMaxLength(12)

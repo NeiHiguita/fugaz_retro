@@ -58,17 +58,21 @@ body {
     margin-bottom: 40px; /* Margen inferior */
 }
 
-.section-title {
-    font-size: 28px; /* Tamaño del título */
-    color: #333; /* Color del título */
-    margin-bottom: 20px; /* Espacio inferior */
-    text-transform: uppercase; /* Convertir texto en mayúsculas */
-}
+/* Estilos para pantallas pequeñas */
+@media (max-width: 600px) {
+    .creative-section {
+    padding: 20px; /* Reducir el espaciado interno */
+    }
 
-.section-content {
-    font-size: 20px; /* Tamaño del texto */
-    line-height: 1.6; /* Interlineado */
-    color: #555; /* Color del texto */
+    .section-title {
+        font-size: 24px; /* Reducir tamaño del título */
+        margin-bottom: 15px; /* Reducir espacio inferior */
+    }
+
+    .section-content {
+        font-size: 16px; /* Reducir tamaño del texto */
+        line-height: 1.4; /* Reducir interlineado */
+    }
 }
 
 /* Estilos para la sección de fabricación de productos */

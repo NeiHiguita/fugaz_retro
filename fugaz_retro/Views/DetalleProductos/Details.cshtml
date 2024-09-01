@@ -1,46 +1,29 @@
-﻿@model fugaz_retro.Models.DetalleProducto
-
-@{
+﻿@{
     ViewData["Title"] = "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var producto = ViewBag.Producto;
+    var tallas = ViewBag.Tallas;
+    var colores = ViewBag.Colores;
 }
 
 <div class="tbl">
-    <h4 class="mb-4">DetalleProducto</h4>
+    <h4 class="mb-4">Detalle Producto</h4>
     <hr />
     <div class="row">
         <div class="col-md-6">
             <dl class="row">
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Producto.NombreProducto)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Producto.NombreProducto)
-                </dd>
-                </<br />
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Talla)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Talla)
-                </dd>
-                <br />
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Color)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Color)
-                </dd>
-                <div class="mt-4">
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
-                </div>
+                <dt class="col-sm-4">Nombre Producto</dt>
+                <dd class="col-sm-8">@producto.NombreProducto</dd>
+
+                <dt class="col-sm-4">Tallas</dt>
+                <dd class="col-sm-8">@string.Join(", ", tallas)</dd>
+
+                <dt class="col-sm-4">Colores</dt>
+                <dd class="col-sm-8">@string.Join(", ", colores)</dd>
             </dl>
+            <div class="mt-4">
+                <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
+            </div>
         </div>
     </div>
-
 </div>

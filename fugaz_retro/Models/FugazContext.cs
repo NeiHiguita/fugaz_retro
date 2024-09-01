@@ -24,6 +24,7 @@ public partial class FugazContext : IdentityDbContext
     public virtual DbSet<DetalleProducto> DetalleProductos { get; set; }
     public virtual DbSet<DetalleInsumo> DetalleInsumos { get; set; }
     public virtual DbSet<Insumo> Insumos { get; set; }
+    public virtual DbSet<CostoEnvio> CostoEnvios { get; set; }
     public virtual DbSet<Pedido> Pedidos { get; set; }
     public virtual DbSet<PerdidaInsumo> PerdidaInsumos { get; set; }
     public virtual DbSet<Permiso> Permisos { get; set; }
@@ -82,18 +83,8 @@ public partial class FugazContext : IdentityDbContext
                 .HasColumnType("date")
                 .HasColumnName("fecha_compra");
             entity.Property(e => e.IdProveedor).HasColumnName("id_proveedor");
-            entity.Property(e => e.Iva).HasColumnName("iva");
-            entity.Property(e => e.MetodoPago)
-                .HasMaxLength(40)
-                .IsUnicode(false)
-                .HasColumnName("metodo_pago");
             entity.Property(e => e.PrecioTotal).HasColumnName("precio_total");
             entity.Property(e => e.Subtotal).HasColumnName("subtotal");
-            entity.Property(e => e.TipoTransferencia)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("tipo_transferencia");
-
             entity.HasOne(d => d.IdProveedorNavigation).WithMany(p => p.Compras)
                 .HasForeignKey(d => d.IdProveedor)
                 .HasConstraintName("FK__Compra__id_prove__4E88ABD4");
@@ -107,6 +98,10 @@ public partial class FugazContext : IdentityDbContext
 
             entity.Property(e => e.IdDetalleCompra).HasColumnName("id_detalle_compra");
             entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+            entity.Property(e => e.UnidadMedida)
+                .HasMaxLength(60)
+                .IsUnicode(false)
+                .HasColumnName("unidad_medida");
             entity.Property(e => e.IdCompra).HasColumnName("id_compra");
             entity.Property(e => e.IdInsumo).HasColumnName("id_insumo");
             entity.Property(e => e.PrecioUnitario).HasColumnName("precio_unitario");
@@ -164,6 +159,10 @@ public partial class FugazContext : IdentityDbContext
                 .HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasColumnName("estado");
             entity.Property(e => e.IdCategoria).HasColumnName("id_categoria");
+            entity.Property(e => e.CategoriaInsumo)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("categoria_insumo");
             entity.Property(e => e.NombreInsumo)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -201,7 +200,6 @@ public partial class FugazContext : IdentityDbContext
                 .HasColumnType("date")
                 .HasColumnName("fecha_pedido");
             entity.Property(e => e.IdCliente).HasColumnName("id_cliente");
-            entity.Property(e => e.Iva).HasColumnName("iva");
             entity.Property(e => e.MetodoPago)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -240,7 +238,10 @@ public partial class FugazContext : IdentityDbContext
             entity.Property(e => e.Fecha)
                 .HasColumnType("date")
                 .HasColumnName("fecha");
-            entity.Property(e => e.IdInsumo).HasColumnName("id_insumo");
+            entity.Property(e => e.IdInsumo).HasColumnName("id_insumo"); 
+            entity.Property(e => e.TipoInsumo).HasColumnName("tipo_insumo");
+            entity.Property(e => e.UnidadMedida).HasColumnName("unidad_medida");
+
             entity.HasOne(d => d.IdInsumoNavigation).WithMany(p => p.PerdidaInsumos)
                 .HasForeignKey(d => d.IdInsumo)
                 .HasConstraintName("FK__Perdida_I__id_pr__5FB337D6");
@@ -248,12 +249,13 @@ public partial class FugazContext : IdentityDbContext
 
         modelBuilder.Entity<Permiso>(entity =>
         {
-            entity.HasKey(e => e.IdPermiso).HasName("PK__Permisos__228F224F4D60E8D9");
+            entity.HasKey(e => e.IdPermiso).HasName("PK__Permiso__5239C83E7AF3E9B1");
+
+            entity.ToTable("Permisos");
 
             entity.Property(e => e.IdPermiso).HasColumnName("id_permiso");
-            entity.Property(e => e.EstadoPermiso).HasColumnName("estado_permiso");
             entity.Property(e => e.NombrePermiso)
-                .HasMaxLength(250)
+                .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("nombre_permiso");
         });
@@ -321,6 +323,7 @@ public partial class FugazContext : IdentityDbContext
         });
 
 
+
         modelBuilder.Entity<Proveedor>(entity =>
         {
             entity.HasKey(e => e.IdProveedor).HasName("PK__Proveedo__8D3DFE284BF63AE3");
@@ -328,28 +331,39 @@ public partial class FugazContext : IdentityDbContext
             entity.ToTable("Proveedor");
 
             entity.Property(e => e.IdProveedor).HasColumnName("id_proveedor");
-            entity.Property(e => e.Direccion)
-                .HasMaxLength(50)
+
+            // Campo para dirección alternativa
+            entity.Property(e => e.DireccionAlternativa)
+                .HasMaxLength(100) // Ajusta el tamaño si necesitas permitir direcciones más largas
                 .IsUnicode(false)
-                .HasColumnName("direccion");
+                .HasColumnName("direccion_alternativa");
+
             entity.Property(e => e.Documento)
                 .HasMaxLength(12)
                 .IsUnicode(false)
                 .HasColumnName("documento");
-            entity.Property(e => e.Estado).HasColumnName("estado");
+
+            entity.Property(e => e.Estado)
+                .HasColumnName("estado");
+
             entity.Property(e => e.NombreCompleto)
                 .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("nombre_completo");
-            entity.Property(e => e.Rut).HasColumnName("rut");
+
+            entity.Property(e => e.Rut)
+                .HasColumnName("rut");
+
             entity.Property(e => e.RepresentanteLegal)
                 .HasMaxLength(40)
                 .IsUnicode(false)
                 .HasColumnName("representante_legal");
+
             entity.Property(e => e.Telefono)
                 .HasMaxLength(12)
                 .IsUnicode(false)
                 .HasColumnName("telefono");
+
             entity.Property(e => e.TipoProveedor)
                 .HasMaxLength(10)
                 .IsUnicode(false)
@@ -384,6 +398,9 @@ public partial class FugazContext : IdentityDbContext
                 .HasMaxLength(40)
                 .IsUnicode(false)
                 .HasColumnName("nombre_rol");
+            entity.Property(r => r.Estado)
+                .HasColumnName("estado")
+                .HasColumnType("tinyint(1)");
         });
 
         modelBuilder.Entity<Usuario>(entity =>

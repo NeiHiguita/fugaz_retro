@@ -19,7 +19,6 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
-      
     }
 
     #login-container {
@@ -155,16 +154,21 @@
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
 
-
             <div class="form-group">
                 <button id="login-submit" type="submit" class="btn btn-custom">Iniciar sesión</button>
             </div>
 
             <div class="form-group">
                 <h6>
-                    ¿No tienes una cuenta?                 <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Regístrate</a>
+                    ¿No tienes una cuenta? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Regístrate</a>
                 </h6>
             </div>
+            <div class="form-group">
+                <h6>
+                    ¿Olvidaste tu contraseña? <a asp-action="ForgotPassword" asp-controller="Home">Recuperar contraseña</a>
+                </h6>
+            </div>
+
         </form>
     </div>
 </div>
@@ -172,6 +176,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         document.querySelectorAll('.toggle-password').forEach(item => {
             item.addEventListener('click', function () {
@@ -185,5 +190,17 @@
                 }
             });
         });
+
+        @if (Model.InactiveUser)
+        {
+            <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Usuario inactivo',
+                    text: 'El usuario está inactivo.',
+                    confirmButtonText: 'Aceptar'
+                });
+            </text>
+        }
     </script>
 }

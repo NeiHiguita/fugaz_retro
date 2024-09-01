@@ -1,9 +1,8 @@
 ﻿@model fugaz_retro.Models.Proveedor
 
 @{
-    ViewData["Title"] = "Edit/proveedor";
+    ViewData["Title"] = "Editar Proveedor";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var successMessage = TempData["SuccessMessage"] as string;
     var errorMessage = TempData["ErrorMessage"] as string;
 }
 
@@ -11,39 +10,46 @@
     <h1>Editar Proveedor</h1>
 
     <hr />
-
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success" role="alert">
-            @successMessage
-        </div>
-    }
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="alert alert-danger" role="alert">
-            @errorMessage
-        </div>
-    }
-
-    <div class="row">
-        <div class="col-md-4">
-            <form asp-action="Edit" id="editForm">
+    <form asp-action="Edit" id="editForm">
+        <div class="row">
+            <div class="col-md-6">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="IdProveedor" />
+
                 <div class="form-group">
                     <label asp-for="TipoProveedor" class="control-label">Tipo de proveedor</label>
                     <select asp-for="TipoProveedor" class="form-control" id="tipoProveedorSelect" readonly>
-                        <option value="Empresa">Empresa</option>
+                        <option value="Jurídico">Jurídico</option>
                         <option value="Natural">Natural</option>
                     </select>
+                    <!-- Campo oculto para enviar el valor del select -->
+                    <input type="hidden" asp-for="TipoProveedor" />
                     <span asp-validation-for="TipoProveedor" class="text-danger"></span>
                 </div>
 
-                <div id="camposEmpresa" class="campos-proveedor">
+                <style>
+                    #tipoProveedorSelect[readonly] {
+                        pointer-events: none;
+                        background-color: #e9ecef;
+                        color: black;
+                    }
+                </style>
+
+
+                <div id="camposEmpresa" class="campos-proveedor" style="display:none;">
                     <!-- Campos específicos para proveedor de empresa -->
                     <div class="form-group">
-                        <label asp-for="Rut" class="control-label"></label>
+                        <label asp-for="Empresa" class="control-label">Empresa</label>
+                        <input asp-for="Empresa" class="form-control" readonly />
+                        <span asp-validation-for="Empresa" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="RepresentanteLegal" class="control-label">Representante Legal</label>
+                        <input asp-for="RepresentanteLegal" class="form-control" />
+                        <span asp-validation-for="RepresentanteLegal" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Rut" class="control-label">RUT</label>
                         <input asp-for="Rut" class="form-control" readonly />
                         <span asp-validation-for="Rut" class="text-danger"></span>
                     </div>
@@ -52,31 +58,37 @@
                 <div id="camposNatural" class="campos-proveedor" style="display:none;">
                     <!-- Campos específicos para proveedor natural -->
                     <div class="form-group">
-                        <label asp-for="Documento" class="control-label"></label>
+                        <label asp-for="NombreCompleto" class="control-label">Nombre Completo</label>
+                        <input asp-for="NombreCompleto" class="form-control" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Documento" class="control-label">Documento</label>
                         <input asp-for="Documento" class="form-control" readonly />
                         <span asp-validation-for="Documento" class="text-danger"></span>
                     </div>
                 </div>
-
+            </div>
+            <div class="col-md-6">
                 <div class="form-group">
-                    <label asp-for="Telefono" class="control-label"></label>
+                    <label asp-for="Telefono" class="control-label">Teléfono</label>
                     <input asp-for="Telefono" class="form-control" />
                     <span asp-validation-for="Telefono" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">
-                    <label asp-for="Direccion" class="control-label"></label>
-                    <input asp-for="Direccion" class="form-control" />
-                    <span asp-validation-for="Direccion" class="text-danger"></span>
+                    <label asp-for="DireccionAlternativa" class="control-label">Dirección Alternativa</label>
+                    <input asp-for="DireccionAlternativa" class="form-control" />
+                    <span asp-validation-for="DireccionAlternativa" class="text-danger"></span>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <input type="submit" value="Guardar" class="btn btn-primary" />
-                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-                </div>
-            </form>
+            <div class="form-group mt-3">
+                <input type="submit" value="Guardar" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 
 @section Scripts {
@@ -87,23 +99,29 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Manejar el cambio del tipo de proveedor
-            $("#tipoProveedorSelect").change(function () {
-                var tipoProveedor = $(this).val();
-                if (tipoProveedor === "Empresa") {
+            var tipoProveedorSelect = $("#tipoProveedorSelect");
+
+            function toggleProveedorFields() {
+                var tipoProveedor = tipoProveedorSelect.val();
+                if (tipoProveedor === "Jurídico") {
                     $(".campos-proveedor").hide();
                     $("#camposEmpresa").show();
                 } else if (tipoProveedor === "Natural") {
                     $(".campos-proveedor").hide();
                     $("#camposNatural").show();
                 }
+            }
+
+            // Cambiar los campos mostrados cuando se selecciona un tipo diferente
+            tipoProveedorSelect.change(function () {
+                toggleProveedorFields();
             });
 
-            $("#tipoProveedorSelect").trigger('change');
+            // Mostrar los campos correctos al cargar la página
+            toggleProveedorFields();
         });
 
         $(document).ready(function () {
-            // Escuchar el evento submit del formulario
             $("#editForm").submit(function (event) {
                 event.preventDefault(); // Evitar el envío del formulario por defecto
 
@@ -117,10 +135,10 @@
                     errorMessage += "El teléfono es obligatorio.<br/>";
                 }
 
-                // Validar dirección
-                if (!$("input[name='Direccion']").val()) {
+                // Validar dirección alternativa
+                if (!$("input[name='DireccionAlternativa']").val()) {
                     isValid = false;
-                    errorMessage += "La dirección es obligatoria.<br/>";
+                    errorMessage += "La dirección alternativa es obligatoria.<br/>";
                 }
 
                 if (!isValid) {
@@ -135,10 +153,15 @@
                 // Realizar la petición AJAX para enviar los datos del formulario
                 fetch(this.action, {
                     method: this.method,
-                    body: new FormData(this)
+                    body: new FormData(this),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
                 })
-                    .then(response => {
-                        if (response.ok) {
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
                             // Mostrar alerta de éxito
                             Swal.fire({
                                 icon: 'success',
@@ -150,11 +173,11 @@
                                 }
                             });
                         } else {
-                            // Si hay algún error, mostrar mensaje de error
+                            // Mostrar mensaje de error
                             Swal.fire({
                                 icon: 'error',
                                 title: '¡Error!',
-                                text: 'Hubo un problema al editar el proveedor.'
+                                text: data.errorMessage || 'Hubo un problema al editar el proveedor.'
                             });
                         }
                     })

@@ -14,6 +14,8 @@ using fugaz_retro.Models;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Ventas")]
+
     public class ProductosController : Controller
     {
         private readonly FugazContext _context;
@@ -60,7 +62,7 @@ namespace fugaz_retro.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Producto producto, string detalleProductosHiddenInput, IFormFile Foto)
+        public async Task<IActionResult> Create(Producto producto, string tallasHiddenInput, string coloresHiddenInput, IFormFile Foto)
         {
             if (ModelState.IsValid)
             {
@@ -76,20 +78,35 @@ namespace fugaz_retro.Controllers
                 _context.Add(producto);
                 await _context.SaveChangesAsync();
 
-                if (!string.IsNullOrEmpty(detalleProductosHiddenInput))
+                if (!string.IsNullOrEmpty(tallasHiddenInput))
                 {
-                    var detalleProductos = JsonConvert.DeserializeObject<List<DetalleProducto>>(detalleProductosHiddenInput);
-                    if (detalleProductos != null)
+                    var tallas = JsonConvert.DeserializeObject<List<DetalleProducto>>(tallasHiddenInput);
+                    if (tallas != null)
                     {
-                        foreach (var detalle in detalleProductos)
+                        foreach (var detalle in tallas)
+                        {
+                            detalle.IdProducto = producto.IdProducto;
+                            detalle.Talla = detalle.Talla ?? string.Empty;
+                            detalle.Color = detalle.Color ?? string.Empty;
+                            _context.DetalleProductos.Add(detalle);
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(coloresHiddenInput))
+                {
+                    var colores = JsonConvert.DeserializeObject<List<DetalleProducto>>(coloresHiddenInput);
+                    if (colores != null)
+                    {
+                        foreach (var detalle in colores)
                         {
                             detalle.IdProducto = producto.IdProducto;
                             _context.DetalleProductos.Add(detalle);
                         }
-                        await _context.SaveChangesAsync();
                     }
                 }
 
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
@@ -117,7 +134,7 @@ namespace fugaz_retro.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Producto producto, List<DetalleProducto> DetalleProductos, IFormFile Foto)
+        public async Task<IActionResult> Edit(int id, Producto producto, string tallasHiddenInput, string coloresHiddenInput, IFormFile Foto)
         {
             if (id != producto.IdProducto)
             {
@@ -150,14 +167,35 @@ namespace fugaz_retro.Controllers
                         _context.Update(producto);
                         await _context.SaveChangesAsync();
 
-                        var existingDetalleProductos = _context.DetalleProductos.Where(dp => dp.IdProducto == id).ToList();
-                        _context.DetalleProductos.RemoveRange(existingDetalleProductos);
-                        await _context.SaveChangesAsync();
+                        var nuevasTallas = JsonConvert.DeserializeObject<List<DetalleProducto>>(tallasHiddenInput) ?? new List<DetalleProducto>();
+                        var nuevosColores = JsonConvert.DeserializeObject<List<DetalleProducto>>(coloresHiddenInput) ?? new List<DetalleProducto>();
 
-                        foreach (var detalle in DetalleProductos)
+                        var nuevosDetalles = nuevasTallas.Concat(nuevosColores).ToList();
+
+                        var existingDetalleProductos = _context.DetalleProductos.Where(dp => dp.IdProducto == id).ToList();
+
+                        var detallesAEliminar = existingDetalleProductos
+                            .Where(e => !nuevosDetalles.Any(d => d.Talla == e.Talla && d.Color == e.Color))
+                            .ToList();
+                        _context.DetalleProductos.RemoveRange(detallesAEliminar);
+
+                        foreach (var detalle in nuevosDetalles)
                         {
-                            detalle.IdProducto = producto.IdProducto;
-                            _context.DetalleProductos.Add(detalle);
+                            var detalleExistente = existingDetalleProductos.FirstOrDefault(e => e.Talla == detalle.Talla && e.Color == detalle.Color);
+
+                            if (detalleExistente == null)
+                            {
+                                detalle.IdProducto = producto.IdProducto;
+                                detalle.Talla = detalle.Talla ?? string.Empty;
+                                detalle.Color = detalle.Color ?? string.Empty;
+                                _context.DetalleProductos.Add(detalle);
+                            }
+                            else
+                            {
+                                detalleExistente.Talla = detalle.Talla;
+                                detalleExistente.Color = detalle.Color;
+                                _context.DetalleProductos.Update(detalleExistente);
+                            }
                         }
 
                         await _context.SaveChangesAsync();
@@ -175,7 +213,6 @@ namespace fugaz_retro.Controllers
 
             return View(producto);
         }
-
 
         // GET: Producto/Delete/5
         public async Task<IActionResult> Delete(int? id)

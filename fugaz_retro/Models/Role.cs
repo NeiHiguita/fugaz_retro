@@ -1,13 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace fugaz_retro.Models;
-
-public partial class Role
+namespace fugaz_retro.Models
 {
-    public int IdRol { get; set; }
+    public partial class Role
+    {
+        public int IdRol { get; set; }
 
-    public string NombreRol { get; set; } = null!;
+        [Required]
+        public string NombreRol { get; set; } = null!;
 
-    public virtual ICollection<RolPermiso> RolPermisos { get; } = new List<RolPermiso>();
+        [Column(TypeName = "tinyint(1)")]
+        public bool Estado { get; set; }
+
+        public virtual ICollection<RolPermiso> RolPermisos { get; set; } = new List<RolPermiso>();
+        public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+    }
 }

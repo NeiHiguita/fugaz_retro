@@ -9,6 +9,8 @@ using Rotativa.AspNetCore;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Ventas")]
+
     public class PedidosController : Controller
     {
         private readonly FugazContext _context;
@@ -24,11 +26,18 @@ namespace fugaz_retro.Controllers
         // GET: Pedidos
         public async Task<IActionResult> Index()
         {
-            var fugazContext = _context.Pedidos.Include(p => p.IdClienteNavigation);
-            // Filtrar los pedidos por estado diferente a "Entregado"
-            var pedidos = await fugazContext.Where(p => p.Estado != "Entregado").ToListAsync();
+            var pedidos = await _context.Pedidos
+                .Include(p => p.IdClienteNavigation) 
+                    .ThenInclude(c => c.Usuarios) 
+                .Include(p => p.DetallePedidos) 
+                    .ThenInclude(dp => dp.IdDetalleProductoNavigation) 
+                        .ThenInclude(dp => dp.Producto) 
+                .Where(p => p.Estado != "Entregado")
+                .ToListAsync();
+
             return View(pedidos);
         }
+
 
         // GET: Pedidos/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -113,9 +122,15 @@ namespace fugaz_retro.Controllers
         public async Task<IActionResult> Create()
         {
             var detalleProductos = await _context.DetalleProductos
-          .Include(dp => dp.Producto)
-          .Where(dp => dp.Talla != null && dp.Color != null) // Filtrar los productos con valores no nulos
-          .ToListAsync();
+                .Include(dp => dp.Producto)
+                .Where(dp => dp.Talla != null && dp.Color != null)
+                .ToListAsync();
+
+            // Obtener las ciudades desde CostoEnvios
+            var ciudades = await _context.CostoEnvios
+                .Select(ce => ce.Ciudad)
+                .Distinct()
+                .ToListAsync();
 
             ViewData["IdCliente"] = new SelectList(_context.Clientes.Select(p => new { p.IdCliente, Nombre = $"{p.Usuarios.NombreUsuario}" }), "IdCliente", "Nombre");
             ViewData["DetalleProductosNombre"] = new SelectList(detalleProductos.Select(dp => new { dp.IdDetalleProducto, Nombre = $"{dp.Producto.NombreProducto}" }), "IdDetalleProducto", "Nombre");
@@ -124,14 +139,37 @@ namespace fugaz_retro.Controllers
             ViewData["DetalleProductosColor"] = new SelectList(detalleProductos.Select(dp => new { dp.IdDetalleProducto, Color = $"{dp.Color}" }), "IdDetalleProducto", "Color");
             ViewData["DetalleInsumos"] = new SelectList(_context.DetalleInsumos.Select(p => new { p.IdDetalleInsumo, NombreCantidad = $"{p.Insumo.NombreInsumo} - {p.Cantidad}" }), "IdDetalleInsumo", "NombreCantidad");
 
-            ViewBag.Ciudades = new List<string>
-            {
-                "Barranquilla", "Bogota", "Cali", "Cartagena" ,"Medellin"
-            };
-            ViewBag.Ciudades.Sort(); 
+            ViewBag.Ciudades = new SelectList(_context.CostoEnvios.Select(c => c.Ciudad).Distinct().ToList());
+
 
             return View();
         }
+        public IActionResult GetShippingCost(string ciudad)
+        {
+            try
+            {
+                // Ejemplo: Busca el costo de envío basado en la ciudad
+                var costoEnvio = _context.CostoEnvios.Where(c => c.Ciudad == ciudad)
+                                 .Select(c => c.Costo)
+                                 .FirstOrDefault();
+
+                if (costoEnvio != null)
+                {
+                    return Json(new { success = true, costoEnvio = costoEnvio });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Costo de envío no encontrado" });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejo de error, loguear si es necesario
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -190,28 +228,37 @@ namespace fugaz_retro.Controllers
             ViewData["DetalleProductosTalla"] = new SelectList(detalleProductos.Select(dp => new { dp.IdDetalleProducto, Talla = $"{dp.Talla}" }), "IdDetalleProducto", "Talla");
             ViewData["DetalleProductosColor"] = new SelectList(detalleProductos.Select(dp => new { dp.IdDetalleProducto, Color = $"{dp.Color}" }), "IdDetalleProducto", "Color");
             ViewData["DetalleInsumos"] = new SelectList(_context.DetalleInsumos.Select(p => new { p.IdDetalleInsumo, NombreCantidad = $"{p.Insumo.NombreInsumo} - {p.Cantidad}" }), "IdDetalleInsumo", "NombreCantidad");
-
-
-
             return View(pedido);
         }
 
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Anular(int id)
         {
-            var pedido = await _context.Pedidos.FindAsync(id);
-            if (pedido == null)
+            try
             {
-                return NotFound();
+                // Buscar el pedido por ID
+                var pedido = await _context.Pedidos.FindAsync(id);
+                if (pedido == null)
+                {
+                    return NotFound();
+                }
+
+                // Cambiar el estado del pedido a "Anulado"
+                pedido.Estado = "Anulado";
+
+                // Si es necesario, actualizar el stock o realizar otras acciones
+                // Ejemplo: Actualizar stock de productos asociados al pedido
+
+                // Guardar cambios en la base de datos
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
             }
-
-            pedido.Estado = "Anulado"; // O cualquier otro estado que defina la anulación
-            _context.Update(pedido);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
+            catch
+            {
+                return Json(new { success = false });
+            }
         }
 
         // GET: Pedidos/Edit/5
@@ -233,12 +280,6 @@ namespace fugaz_retro.Controllers
             }
 
             ViewBag.ClienteNombre = pedido.IdClienteNavigation?.Usuarios?.NombreUsuario;
-
-            ViewBag.Ciudades = new List<string>
-            {
-                "Barranquilla", "Bogota", "Cali", "Cartagena","Medellin"
-            };
-            ViewBag.Ciudades.Sort();
 
             return View(pedido);
         }
@@ -357,10 +398,57 @@ namespace fugaz_retro.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        [HttpPost]
+        public async Task<IActionResult> CambiarEstado(int id)
+        {
+            try
+            {
+                var pedido = await _context.Pedidos.FindAsync(id);
+                if (pedido == null)
+                {
+                    return NotFound();
+                }
 
+                // Cambiar el estado del pedido
+                switch (pedido.Estado)
+                {
+                    case "En proceso":
+                        pedido.Estado = "Enviado";
+                        break;
+                    case "Enviado":
+                        pedido.Estado = "Entregado";
+                        break;
+                    case "Entregado":
+                        // Si ya está en "Entregado", no se hace ningún cambio
+                        return Json(new { success = false, message = "El pedido ya ha sido entregado." });
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Si el estado es "Entregado", crear una nueva venta
+                if (pedido.Estado == "Entregado")
+                {
+                    var venta = new Venta
+                    {
+                        IdPedido = pedido.IdPedido,
+                        // Establecer otros campos de la venta aquí según tu modelo
+                    };
+
+                    _context.Ventas.Add(venta);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Json(new { success = true, nuevoEstado = pedido.Estado });
+            }
+            catch
+            {
+                return Json(new { success = false });
+            }
+        }
         private bool PedidoExists(int id)
         {
             return (_context.Pedidos?.Any(e => e.IdPedido == id)).GetValueOrDefault();
         }
+
     }
 }

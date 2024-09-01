@@ -5,62 +5,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        padding-top: 100px;
-        left: 0;
-        width: 100%;
-        top: 0;
-        height: 100%;
-        overflow: auto;
-        background-color: rgb(0,0,0);
-        background-color: rgba(0,0,0,0.4);
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-    }
-
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        padding-top: 10px;
-    }
-
-        .modal-footer button {
-            margin-left: 10px;
-        }
-
-    .btn-disabled {
-        pointer-events: none;
-        opacity: 0.6;
-    }
-</style>
-
-
 <div class="tbl">
     <h1>Pedidos</h1>
     <div class="row mb-3">
@@ -68,15 +12,17 @@
             <a asp-action="Create" class="btn btn-success">Crear Nuevo <img src="/Images/agregar.png" height="24px" alt="Agregar" /></a>
         </div>
     </div>
-    <table class="table table-striped table-bordered" id="Table">
+    <table class="table table-striped table-bordered" id="Tablepedido">
         <thead>
             <tr>
-                <th>Metodo de pago</th>
+                <th>Cliente</th>
+                <th>Ciudad</th>
+                @* <th>Producto</th> *@
+                <th>Total Pedido</th>
                 <th>Fecha Pedido</th>
                 <th>Fecha Entrega</th>
-                <th>Estado</th>
                 <th>Acciones</th>
-                <th>Anular</th>
+                <th>Estado / Anular</th>
             </tr>
         </thead>
         <tbody>
@@ -84,22 +30,63 @@
             {
                 var isAnulado = item.Estado == "Anulado";
                 <tr>
-                    <td>@Html.DisplayFor(modelItem => item.MetodoPago)</td>
-                    <td>@Html.DisplayFor(modelItem => item.FechaPedido)</td>
-                    <td>@Html.DisplayFor(modelItem => item.FechaEntrega)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Estado)</td>
+                    <!-- Nombre del Cliente -->
+                    <td>@item.IdClienteNavigation?.Usuarios?.NombreUsuario</td>
+
+                    <!-- Ciudad -->
+                    <td>@item.Ciudad</td>
+
+                    <!-- Nombre del Producto (usamos FirstOrDefault para obtener el primer detalle del pedido) -->
+@*                     <td>@item.DetallePedidos.FirstOrDefault()?.IdDetalleProductoNavigation?.Producto?.NombreProducto</td> *@
+
+                    <!-- Total del Pedido -->
+                    <td>@item.TotalPedido</td>
+
+                    <!-- Fecha del Pedido -->
+                    <td>@item.FechaPedido.ToString("dd/MM/yyyy")</td>
+
+                    <!-- Fecha de Entrega -->
+                    <td>@item.FechaEntrega.ToString("dd/MM/yyyy")</td>
+
+
+
+                    <!-- Acciones -->
                     <td class="cntr">
-                        <a asp-action="Edit" asp-route-id="@item.IdPedido" class="@(isAnulado ? "btn-disabled" : "")">
-                            <i class="fas fa-pencil-alt mx-1" style="color: green; font-size: 20px"></i>
-                        </a>
                         <a asp-action="Details" asp-route-id="@item.IdPedido" class="@(isAnulado ? "btn-disabled" : "")">
                             <i class="fas fa-eye mx-1" style="color: #285d86; font-size: 20px"></i>
                         </a>
                     </td>
+
+                    <!-- Anular -->
                     <td class="cntr">
-                        <form asp-action="Anular" asp-route-id="@item.IdPedido" method="post" class="anular-form" style="display:inline;">
-                            <button type="submit" class="btn btn-danger btn-sm @(isAnulado ? "btn-disabled" : "")" @(isAnulado ? "disabled" : "")>Anular</button>
-                        </form>
+                            @{
+                                string estadoClase = "";
+                                string textoBoton = "";
+
+                                switch (item.Estado)
+                                {
+                                    case "En proceso":
+                                        estadoClase = "btn-primary";
+                                        textoBoton = "En proceso";
+                                        break;
+                                    case "Enviado":
+                                        estadoClase = "btn-warning";
+                                    textoBoton = " ‎ ‎ ‎ Enviado ‎ ‎ ‎ ";
+                                        break;
+                                    case "Entregado":
+                                        estadoClase = "btn-success";
+                                        textoBoton = "Entregado";
+                                        break;
+                                    default:
+                                        estadoClase = "btn-secondary";
+                                        textoBoton = item.Estado;
+                                        break;
+                                }
+                            }
+
+                        <button type="button" class="btn btn-sm @estadoClase cambiar-estado-btn" data-id="@item.IdPedido" data-estado="@item.Estado">@textoBoton</button>
+                    
+                        <button type="button" class="btn btn-danger btn-sm anular-btn @(isAnulado ? "btn-disabled" : "")" @(isAnulado ? "disabled" : "") data-id="@item.IdPedido" data-anulado="@isAnulado">Anular</button>
                     </td>
                 </tr>
             }
@@ -107,65 +94,69 @@
     </table>
 </div>
 
-<div id="myModal" tabindex="-1" aria-hidden="true" class="modal">
-    <div class="modal-content" style="margin-top:150px;">
-        <span class="close">&times;</span>
-        <p>¿Estás seguro de que quieres anular este pedido?</p>
-        <div class="modal-footer">
-            <button id="cancelButton" class="btn btn-secondary">Cancelar</button>
-            <button id="confirmButton" class="btn btn-danger">Anular</button>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
-            var modal = document.getElementById("myModal");
-            var closeModal = document.getElementsByClassName("close")[0];
-            var cancelButton = document.getElementById("cancelButton");
-            var confirmButton = document.getElementById("confirmButton");
+            document.querySelectorAll('.cambiar-estado-btn').forEach(button => {
+                button.addEventListener('click', function (event) {
+                    var idPedido = this.getAttribute('data-id');
+                    var estadoActual = this.getAttribute('data-estado');
+                    var nuevoEstado = "";
 
-            document.querySelectorAll('.anular-form').forEach(form => {
-                form.addEventListener('submit', function (event) {
-                    event.preventDefault();
-                    modal.style.display = "block";
-
-                    confirmButton.onclick = function () {
-                        modal.style.display = "none";
-                        form.submit();
+                    switch (estadoActual) {
+                        case "En proceso":
+                            nuevoEstado = "Enviado";
+                            break;
+                        case "Enviado":
+                            nuevoEstado = "Entregado";
+                            break;
+                        default:
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Estado finalizado',
+                                text: 'Este pedido ya ha sido entregado.',
+                                confirmButtonText: 'Aceptar'
+                            });
+                            return;
                     }
 
-                    closeModal.onclick = function () {
-                        modal.style.display = "none";
-                    }
-
-                    cancelButton.onclick = function () {
-                        modal.style.display = "none";
-                    }
-
-                    window.onclick = function (event) {
-                        if (event.target == modal) {
-                            modal.style.display = "none";
+                    Swal.fire({
+                        title: '¿Cambiar el estado del pedido?',
+                        text: `El estado cambiará de ${estadoActual} a ${nuevoEstado}.`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, cambiar estado',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: '@Url.Action("CambiarEstado", "Pedidos")',
+                                type: 'POST',
+                                data: { id: idPedido, estado: nuevoEstado },
+                                success: function (response) {
+                                    Swal.fire(
+                                        'Estado cambiado',
+                                        'El estado del pedido ha sido actualizado.',
+                                        'success'
+                                    ).then(() => {
+                                        location.reload();
+                                    });
+                                },
+                                error: function () {
+                                    Swal.fire(
+                                        'Error',
+                                        'Hubo un problema al cambiar el estado del pedido.',
+                                        'error'
+                                    );
+                                }
+                            });
                         }
-                    }
+                    });
                 });
             });
-
-            function toggleStatus(id) {
-                var isChecked = $("#toggleSwitch_" + id).prop("checked");
-                $.ajax({
-                    url: '@Url.Action("ToggleStatus", "Pedidos")',
-                    type: 'POST',
-                    data: { id: id, estado: isChecked },
-                    success: function (result) {
-                        // Puedes realizar alguna acción adicional si es necesario
-                    },
-                    error: function (xhr, status, error) {
-                        console.error(xhr.responseText);
-                    }
-                });
-            }
         });
     </script>
 }

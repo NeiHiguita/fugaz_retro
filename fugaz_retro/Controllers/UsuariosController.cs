@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Usuarios")]
     public class UsuariosController : Controller
     {
         private readonly FugazContext _context;
@@ -21,13 +22,20 @@ namespace fugaz_retro.Controllers
         {
             _context = context;
             _userManager = userManager;
-            _signInManager = signInManager; 
+            _signInManager = signInManager;
         }
 
         // GET: Usuarios
         public async Task<IActionResult> Index()
         {
-            var fugazContext = _context.Usuarios.Include(u => u.IdRolNavigation);
+            var fugazContext = _context.Usuarios
+                                       .Include(u => u.IdRolNavigation)
+                                       .ThenInclude(rp => rp.RolPermisos)
+                                       .ThenInclude(rp => rp.IdPermisoNavigation);
+
+            var roles = await _context.Roles.ToListAsync();
+            ViewData["Roles"] = roles;
+
             return View(await fugazContext.ToListAsync());
         }
 
@@ -53,7 +61,8 @@ namespace fugaz_retro.Controllers
         // GET: Usuarios/Create
         public IActionResult Create()
         {
-            ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol");
+            var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+            ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol");
             return View();
         }
 
@@ -68,7 +77,8 @@ namespace fugaz_retro.Controllers
                 if (existingUserWithEmail != null)
                 {
                     ModelState.AddModelError(string.Empty, "El correo electrónico ya está registrado.");
-                    ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol", usuario.IdRol);
+                    var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+                    ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol", usuario.IdRol);
                     return View(usuario);
                 }
 
@@ -76,7 +86,8 @@ namespace fugaz_retro.Controllers
                 if (existingUserWithDocument != null)
                 {
                     ModelState.AddModelError(string.Empty, "El documento ya está registrado.");
-                    ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol", usuario.IdRol);
+                    var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+                    ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol", usuario.IdRol);
                     return View(usuario);
                 }
 
@@ -111,60 +122,18 @@ namespace fugaz_retro.Controllers
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
 
-                    ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol", usuario.IdRol);
+                    var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+                    ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol", usuario.IdRol);
                     return View(usuario);
                 }
             }
             else
             {
-                ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol", usuario.IdRol);
+                var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+                ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol", usuario.IdRol);
                 return View(usuario);
             }
         }
-        // GET: Usuarios/Delete/5
-        [HttpPost]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var usuario = await _context.Usuarios
-                                        .Include(u => u.Cliente)
-                                        .ThenInclude(c => c.Pedidos)
-                                        .FirstOrDefaultAsync(u => u.IdUsuario == id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            // Verificar si el cliente asociado al usuario tiene algún pedido
-            if (usuario.Cliente != null && usuario.Cliente.Pedidos.Any())
-            {
-                return BadRequest("No se puede eliminar el usuario porque está asociado a un pedido.");
-            }
-
-            try
-            {
-                _context.Usuarios.Remove(usuario);
-                await _context.SaveChangesAsync();
-
-                var identityUser = await _userManager.FindByEmailAsync(usuario.Correo);
-                if (identityUser != null)
-                {
-                    await _userManager.DeleteAsync(identityUser);
-                }
-
-                if (User.Identity.Name == usuario.Correo)
-                {
-                    await _signInManager.SignOutAsync();
-                }
-
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("No se pudo eliminar el usuario. Error: " + ex.Message);
-            }
-        }
-
 
 
 
@@ -185,7 +154,8 @@ namespace fugaz_retro.Controllers
                 return NotFound();
             }
 
-            ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol", usuario.IdRol);
+            var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+            ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol", usuario.IdRol);
             return View(usuario);
         }
 
@@ -217,13 +187,13 @@ namespace fugaz_retro.Controllers
                     existingUser.Estado = usuario.Estado;
                     existingUser.DateRegister = usuario.DateRegister;
                     existingUser.Document = usuario.Document;
-                    existingUser.IdRol = usuario.IdRol; // Actualizando el IdRol
+                    existingUser.IdRol = usuario.IdRol;
 
                     if (existingUser.Cliente != null)
                     {
                         existingUser.Cliente.Telefono = Telefono;
                     }
-                    else if (usuario.IdRol == 7) // Si el rol es de Cliente
+                    else if (usuario.IdRol == 7)
                     {
                         existingUser.Cliente = new Cliente
                         {
@@ -248,19 +218,23 @@ namespace fugaz_retro.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdRol"] = new SelectList(_context.Roles, "IdRol", "NombreRol", usuario.IdRol);
+
+            var rolesActivos = _context.Roles.Where(r => r.Estado == true).ToList();
+            ViewData["IdRol"] = new SelectList(rolesActivos, "IdRol", "NombreRol", usuario.IdRol);
             return View(usuario);
         }
 
-
         // POST: Usuarios/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest("ID de usuario inválido.");
+            }
+
             var usuario = await _context.Usuarios
                                         .Include(u => u.Cliente)
-                                        .ThenInclude(c => c.Pedidos)
                                         .FirstOrDefaultAsync(u => u.IdUsuario == id);
 
             if (usuario == null)
@@ -268,17 +242,12 @@ namespace fugaz_retro.Controllers
                 return NotFound();
             }
 
-            // Verificar si el cliente asociado al usuario tiene algún pedido
-            if (usuario.Cliente != null && usuario.Cliente.Pedidos != null && usuario.Cliente.Pedidos.Any())
-            {
-                ModelState.AddModelError(string.Empty, "No se puede eliminar el usuario porque está asociado a un pedido.");
-                return View("Delete", usuario); // Redirigir a la vista de eliminación con el mensaje de error
-            }
-
             try
             {
-                _context.Usuarios.Remove(usuario);
-                await _context.SaveChangesAsync();
+                if (usuario.Cliente != null)
+                {
+                    _context.Clientes.Remove(usuario.Cliente);
+                }
 
                 var identityUser = await _userManager.FindByEmailAsync(usuario.Correo);
                 if (identityUser != null)
@@ -286,22 +255,25 @@ namespace fugaz_retro.Controllers
                     await _userManager.DeleteAsync(identityUser);
                 }
 
+                _context.Usuarios.Remove(usuario);
+                await _context.SaveChangesAsync();
+
                 if (User.Identity.Name == usuario.Correo)
                 {
                     await _signInManager.SignOutAsync();
                 }
 
-                return RedirectToAction(nameof(Index));
+                return Ok();
+            }
+            catch (DbUpdateException dbEx)
+            {
+                return BadRequest("No se pudo eliminar el usuario ya que tiene un pedido asociado.");
             }
             catch (Exception ex)
             {
-                // Manejar cualquier error aquí, por ejemplo, mostrando un mensaje de error
-                ModelState.AddModelError(string.Empty, "No se pudo eliminar el usuario. Error: " + ex.Message);
-                return View("Delete", usuario); // Redirigir a la vista de eliminación con el mensaje de error
+                return BadRequest("No se pudo eliminar el usuario. Error: " + ex.Message);
             }
         }
-
-
 
         private bool UsuarioExists(int id)
         {
@@ -318,9 +290,41 @@ namespace fugaz_retro.Controllers
             }
 
             usuario.Estado = estado;
+
+            var identityUser = await _userManager.FindByEmailAsync(usuario.Correo);
+            if (identityUser != null)
+            {
+                identityUser.EmailConfirmed = estado;
+                await _userManager.UpdateAsync(identityUser);
+            }
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetDetails(int id)
+        {
+            var usuario = await _context.Usuarios
+                                        .Include(u => u.Cliente)
+                                        .Include(u => u.IdRolNavigation)
+                                        .FirstOrDefaultAsync(u => u.IdUsuario == id);
+
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                idUsuario = usuario.IdUsuario,
+                nombreUsuario = usuario.NombreUsuario,
+                correo = usuario.Correo,
+                estado = usuario.Estado,
+                dateRegister = usuario.DateRegister,
+                document = usuario.Document,
+                telefono = usuario.Cliente?.Telefono
+            });
         }
     }
 }

@@ -12,7 +12,6 @@ public class DetallePedido
     public string? talla { get; set; } 
     public string? color { get; set; }
     public double Subtotal { get; set; }
-
     public Pedido? IdPedidoNavigation { get; set; }
     public DetalleProducto? IdDetalleProductoNavigation { get; set; }
     //public Producto? Producto { get; set; }

@@ -16,17 +16,6 @@
                         <label asp-for="IdCliente" class="control-label">Nombre Cliente</label>
                         <select asp-for="IdCliente" class="form-control" asp-items="ViewBag.IdCliente"></select>
                     </div>
-
-                  @*   <div class="form-group">
-                        <label asp-for="Estado" class="control-label">Estado</label>
-                        <select asp-for="Estado" class="form-control">
-                            <option value="">Seleccionar Estado</option>
-                            <option value="En proceso">En proceso</option>
-                             <option value="Enviado">Enviado</option>
-                         </select>
-                        <span asp-validation-for="Estado" class="text-danger"></span>
-                    </div> *@
-
                     <div class="form-group">
                         <label asp-for="MetodoPago" class="control-label">Método de Pago</label>
                         <select asp-for="MetodoPago" class="form-control" id="MetodoPago">
@@ -48,27 +37,25 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label asp-for="Ciudad" class="control-label">Ciudad</label>
-                        <select asp-for="Ciudad" class="form-control" asp-items="@(new SelectList(ViewBag.Ciudades))" id="CiudadSelect">
-                            <option value="">Selecciona una ciudad</option>
-                        </select>
+                        <label asp-for="Ciudad" class="control-label"></label>
+                        <select asp-for="Ciudad" asp-items="ViewBag.Ciudades" class="form-control"></select>
                         <span asp-validation-for="Ciudad" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Direccion" class="control-label">Direccion</label>
+                        <label asp-for="Direccion" class="control-label">Dirección</label>
                         <input asp-for="Direccion" class="form-control" />
                         <span asp-validation-for="Direccion" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="FechaPedido" class="control-label">Fecha del Pedido</label>
-                        <input asp-for="FechaPedido" class="form-control" />
+                        <input asp-for="FechaPedido" class="form-control" id="fechaPedido" type="date" />
                         <span asp-validation-for="FechaPedido" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="FechaEntrega" class="control-label">Fecha de Entrega</label>
-                        <input asp-for="FechaEntrega" class="form-control" />
+                        <input asp-for="FechaEntrega" class="form-control" id="FechaEntrega" type="date" />
                         <span asp-validation-for="FechaEntrega" class="text-danger"></span>
                         <span id="FechaEntregaError" class="text-danger" style="display: none;">La fecha de entrega debe ser posterior a la fecha del pedido.</span>
                     </div>
@@ -134,21 +121,15 @@
                 <div id="detallesPedidosHidden"></div>
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label asp-for="CostoPedido" class="control-label">Costo del Pedido</label>
+                        <label asp-for="CostoPedido" class="control-label">Precio del Pedido</label>
                         <input asp-for="CostoPedido" id="CostoPedido" class="form-control" readonly />
                         <span asp-validation-for="CostoPedido" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="CostoEnvio" class="control-label">Costo de Envío</label>
+                        <label asp-for="CostoEnvio" class="control-label">Precio de Envío</label>
                         <input asp-for="CostoEnvio" id="CostoEnvio" class="form-control" readonly />
                         <span asp-validation-for="CostoEnvio" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Iva" class="control-label">IVA</label>
-                        <input asp-for="Iva" id="Iva" class="form-control" readonly />
-                        <span asp-validation-for="Iva" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
@@ -202,6 +183,7 @@
                 }
             });
 
+
             $('#MetodoPago').change(function () {
                 var selectedValue = $(this).val();
                 if (selectedValue === 'Transferencia') {
@@ -250,7 +232,7 @@
                 var cantidad = parseInt($(this).val());
                 if (!isNaN(precio) && !isNaN(cantidad) && cantidad > 0) {
                     var subtotal = precio * cantidad;
-                    $('#subtotalProducto').val(subtotal.toFixed(2));
+                    $('#subtotalProducto').val(subtotal);
                 } else {
                     $('#subtotalProducto').val('');
                 }
@@ -295,25 +277,25 @@
             if (idDetalleProducto && cantidad && subtotal) {
                 var index = $('#detallePedidosTable tbody tr').length - 1;
                 var detalleHtml = `
-                                                                                <tr>
-                                                                                    <td>${nombreProducto}</td>
-                                                                                    <td>${precio}</td>
-                                                                                    <td>${talla}</td>
-                                                                                    <td>${color}</td>
-                                                                                    <td class="d-none">${nombreDetalleInsumo}</td>
-                                                                                    <td>${cantidad}</td>
-                                                                                    <td>${subtotal}</td>
-                                                                                    <td><button type="button" class="btn btn-danger" onclick="removeDetallePedido(this)">Eliminar</button></td>
-                                                                                </tr>
-                                                                                    <input type="hidden" name="detallesPedido[${index}].IdDetalleProducto" value="${idDetalleProducto}" />
-                                                                                    <input type="hidden" name="detallesPedido[${index}].Precio" value="${precio}" />
-                                                                                    <input type="hidden" name="detallesPedido[${index}].Talla" value="${talla}" />
-                                                                                    <input type="hidden" name="detallesPedido[${index}].Color" value="${color}" />
-                                                                                            <input class="d-none" type="hidden" name="detallesPedido[${index}].IdDetalleInsumo" value="${idDetalleInsumo}" />
-                                                                                    <input type="hidden" name="detallesPedido[${index}].Cantidad" value="${cantidad}" />
-                                                                                    <input type="hidden" name="detallesPedido[${index}].Subtotal" value="${subtotal}" />
+                                                                                        <tr>
+                                                                                            <td>${nombreProducto}</td>
+                                                                                            <td>${precio}</td>
+                                                                                            <td>${talla}</td>
+                                                                                            <td>${color}</td>
+                                                                                            <td class="d-none">${nombreDetalleInsumo}</td>
+                                                                                            <td>${cantidad}</td>
+                                                                                            <td>${subtotal}</td>
+                                                                                            <td><button type="button" class="btn btn-danger" onclick="removeDetallePedido(this)">Eliminar</button></td>
+                                                                                        </tr>
+                                                                                            <input type="hidden" name="detallesPedido[${index}].IdDetalleProducto" value="${idDetalleProducto}" />
+                                                                                            <input type="hidden" name="detallesPedido[${index}].Precio" value="${precio}" />
+                                                                                            <input type="hidden" name="detallesPedido[${index}].Talla" value="${talla}" />
+                                                                                            <input type="hidden" name="detallesPedido[${index}].Color" value="${color}" />
+                                                                                                    <input class="d-none" type="hidden" name="detallesPedido[${index}].IdDetalleInsumo" value="${idDetalleInsumo}" />
+                                                                                            <input type="hidden" name="detallesPedido[${index}].Cantidad" value="${cantidad}" />
+                                                                                            <input type="hidden" name="detallesPedido[${index}].Subtotal" value="${subtotal}" />
 
-                                                                            `;
+                                                                                    `;
                 // $('#detallesPedidosHidden').append(detalleHtml);
                 $('#detallePedidosTable tbody').append(detalleHtml);
                 clearDetalleForm();
@@ -347,17 +329,15 @@
                 }
             });
 
-            $('#CostoPedido').val(totalSubtotales.toFixed(2));
+            $('#CostoPedido').val(totalSubtotales);
 
             var costoEnvio = parseFloat($('#CostoEnvio').val()) || 0;
             var descuento = parseFloat($('#Descuento').val()) || 0;
-            var ivaPorcentaje = 0.19;
-            var iva = totalSubtotales * ivaPorcentaje;
-            var totalPedido = totalSubtotales + costoEnvio - descuento + iva;
+            var totalPedido = totalSubtotales + costoEnvio - descuento;
 
-            $('#Iva').val(iva.toFixed(2));
-            $('#TotalPedido').val(totalPedido.toFixed(2));
+            $('#TotalPedido').val(totalPedido);
         }
+
 
         $('#CostoEnvio, #Descuento').on('input', calcularTotalPedido);
         $('#detallePedidosTable').on('DOMSubtreeModified', calcularTotalPedido);
@@ -383,24 +363,107 @@
                 }
             });
         });
-        document.getElementById('CiudadSelect').addEventListener('change', function () {
-            var ciudad = this.value;
-            var costoEnvio = 0;
+       
+        $(document).ready(function () {
+            // Función para obtener la fecha de hoy en formato YYYY-MM-DD
+            function obtenerFechaHoy() {
+                var hoy = new Date();
+                var dia = hoy.getDate();
+                var mes = hoy.getMonth() + 1; 
+                var año = hoy.getFullYear();
 
-            if (ciudad === 'Bogota') {
-                costoEnvio = 15000;
-            } else if (ciudad === 'Cali') {
-                costoEnvio = 9500;
-            } else if (ciudad === 'Medellin') {
-                costoEnvio = 12000;
-            } else if (ciudad === 'Barranquilla') {
-                costoEnvio = 17000;
-            } else if (ciudad === 'Cartagena') {
-                costoEnvio = 17000;
-            } // Agrega más ciudades y sus costos de envío según sea necesario
+                if (dia < 10) dia = '0' + dia;
+                if (mes < 10) mes = '0' + mes;
 
-            document.getElementById('CostoEnvio').value = costoEnvio;
+                return año + '-' + mes + '-' + dia;
+            }
+
+            // Función para obtener la fecha de hace 5 días en formato YYYY-MM-DD
+            function obtenerFechaLimite() {
+                var hoy = new Date();
+                hoy.setDate(hoy.getDate() - 5);
+                var dia = hoy.getDate();
+                var mes = hoy.getMonth() + 1; // Los meses empiezan en 0
+                var año = hoy.getFullYear();
+
+                if (dia < 10) dia = '0' + dia;
+                if (mes < 10) mes = '0' + mes;
+
+                return año + '-' + mes + '-' + dia;
+            }
+
+            // Configurar el campo de fecha de pedido
+            var fechaHoy = obtenerFechaHoy();
+            var fechaLimite = obtenerFechaLimite();
+            var $fechaPedido = $('#fechaPedido');
+
+            // Establecer los valores min y max para el campo de fecha
+            $fechaPedido.attr('max', fechaHoy); // La fecha máxima es hoy
+            $fechaPedido.attr('min', fechaLimite); // La fecha mínima es 5 días antes
+            $fechaPedido.val(fechaHoy); // Establecer la fecha actual como valor predeterminado
+
+            var $fechaEntrega = $('#FechaEntrega');
+
+            function actualizarFechaEntrega() {
+                var fechaPedido = new Date($fechaPedido.val());
+                var fechaMinEntrega = new Date(fechaPedido);
+                fechaMinEntrega.setDate(fechaPedido.getDate() + 1); // La fecha de entrega mínima es al día siguiente
+
+                var fechaMaxEntrega = new Date(fechaPedido);
+                fechaMaxEntrega.setDate(fechaPedido.getDate() + 15); // La fecha de entrega máxima es 5 días después
+
+                // Formatear las fechas para el input
+                var minEntrega = fechaMinEntrega.toISOString().split('T')[0];
+                var maxEntrega = fechaMaxEntrega.toISOString().split('T')[0];
+
+                $fechaEntrega.attr('min', minEntrega);
+                $fechaEntrega.attr('max', maxEntrega);
+            }
+
+            // Actualizar la fecha de entrega cuando cambie la fecha del pedido
+            $fechaPedido.on('change', function () {
+                actualizarFechaEntrega();
+                validarFechas();
+            });
+
+            actualizarFechaEntrega();
+
+            $fechaPedido.on('change', function () {
+                actualizarFechaEntrega();
+                validarFechas();
+            });
+
+            function validarFechas() {
+                var fechaPedido = new Date($fechaPedido.val());
+                var fechaEntrega = new Date($fechaEntrega.val());
+
+                if (fechaEntrega < fechaPedido || fechaEntrega > new Date(fechaPedido.setDate(fechaPedido.getDate() + 15))) {
+                    $('#FechaEntregaError').show();
+                } else {
+                    $('#FechaEntregaError').hide();
+                }
+            }
+
+            $fechaEntrega.on('change', function () {
+                validarFechas();
+            });
+
+            $('#Ciudad').change(function () {
+                var ciudadSeleccionada = $(this).val();
+                if (ciudadSeleccionada) {
+                    $.getJSON('/Pedidos/GetShippingCost', { ciudad: ciudadSeleccionada }, function (data) {
+                        if (data.success) {
+                            $('#CostoEnvio').val(data.costoEnvio);
+                            calcularTotalPedido();
+                        } else {
+                            $('#CostoEnvio').val(0);
+                        }
+                    });
+                } else {
+                    $('#CostoEnvio').val(0);
+                }
+            });
+
         });
     </script>
-        </script>
 }

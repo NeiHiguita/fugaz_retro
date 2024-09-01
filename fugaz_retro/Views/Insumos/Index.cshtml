@@ -7,11 +7,12 @@
     // Diccionario para mapear nombres de propiedades a nombres de encabezados deseados
     Dictionary<string, string> headerNames = new Dictionary<string, string>
     {
-        { "NombreInsumo", "Nombre del Insumo" },
+        { "NombreInsumo", "Nombre" },
+        { "IdCategoriaNavigation.NombreCategoria", "Categoría" },
+        {"CategoriaInsumo", "Tipo"},
         { "Stock", "Stock" },
         { "Estado", "Estado" },
         { "PrecioUnitario", "Precio Unitario" },
-        { "IdCategoriaNavigation.NombreCategoria", "Categoría" }
     };
 }
 
@@ -34,86 +35,159 @@
                 <th>Acciones</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var insumo in Model)
-            {
-                <tr>
-                    @foreach (var header in headerNames)
-                    {
-                        <td>
-                            @if (header.Key == "Stock")
-                            {
-                                @insumo.Stock
-                            }
-                            else if (header.Key == "PrecioUnitario")
-                            {
-                                @Html.Raw($"${insumo.PrecioUnitario:N0}")
-                            }
-                            else if (header.Key == "Estado")
-                            {
-                                @if (insumo.Stock > 3)
+            <tbody>
+                @foreach (var insumo in Model)
+                {
+                    <tr>
+                        @foreach (var header in headerNames)
+                        {
+                            <td>
+                                @if (header.Key == "Stock")
                                 {
-                                    <span class="text-success">Disponible</span>
+                                    @insumo.Stock
+                                }
+                                else if (header.Key == "PrecioUnitario")
+                                {
+                                    @Html.Raw($"${insumo.PrecioUnitario:N0}")
+                                }
+                                else if (header.Key == "Estado")
+                                {
+                                    if (insumo.Stock > 3)
+                                    {
+                                        <span class="text-success">Disponible</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">Agotado</span>
+                                    }
+                                }
+                                else if (header.Key == "IdCategoriaNavigation.NombreCategoria")
+                                {
+                                    @if (insumo.IdCategoriaNavigation != null && insumo.IdCategoriaNavigation.NombreCategoria != null)
+                                    {
+                                        @insumo.IdCategoriaNavigation.NombreCategoria
+                                    }
+                                    else
+                                    {
+                                        @:No disponible
+                                    }
+                                }
+                                else if (header.Key == "CategoriaInsumo")
+                                {
+                                    @if (!string.IsNullOrEmpty(insumo.CategoriaInsumo))
+                                    {
+                                        @insumo.CategoriaInsumo
+                                    }
+                                    else
+                                    {
+                                        @:No disponible
+                                    }
                                 }
                                 else
                                 {
-                                    <span class="text-danger">Agotado</span>
+                                    @if (insumo.GetType().GetProperty(header.Key)?.GetValue(insumo) != null)
+                                    {
+                                        @insumo.GetType().GetProperty(header.Key)?.GetValue(insumo)
+                                    }
+                                    else
+                                    {
+                                        @:No disponible
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                @GetNestedPropertyValue(insumo, header.Key)
-                            }
+                            </td>
+                        }
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@insumo.IdInsumo" class="icon-link">
+                                <i class="fas fa-pencil-alt" style="color: green; font-size: 22px"></i>
+                            </a>
+                            <a href="javascript:void(0);" onclick="showDetailsModal(@insumo.IdInsumo)">
+                                <i class="fas fa-eye" style="color: #285d86; font-size: 22px; margin-right: 20px"></i>
+                            </a>
                         </td>
-                    }
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@insumo.IdInsumo" class="icon-link">
-                            <i class="fas fa-pencil-alt" style="color: green; font-size: 22px"></i>
-                        </a>
-                        <a asp-action="Details" asp-route-id="@insumo.IdInsumo" class="icon-link">
-                            <i class="fas fa-eye" style="color: #285d86; font-size: 22px"></i>
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@insumo.IdInsumo" class="icon-link">
-                            <i class="fas fa-trash-alt" style="color: #bf0808; font-size: 22px"></i>
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-@functions {
-    public string GetNestedPropertyValue(object obj, string propertyName)
-    {
-        var propertyNames = propertyName.Split('.');
-        object propertyValue = obj;
-
-        foreach (var name in propertyNames)
-        {
-            var property = propertyValue.GetType().GetProperty(name);
-            if (property != null)
-            {
-                propertyValue = property.GetValue(propertyValue);
-
-                // Check if the property value is null before accessing nested property
-                if (propertyValue == null)
-                {
-                    return string.Empty; // Return empty string if property is null
+                    </tr>
                 }
-            }
-            else
-            {
-                return string.Empty;
-            }
-        }
+            </tbody>
 
-        return propertyValue?.ToString();
+
+    </table>
+</div
+<!-- Modal de Detalles -->
+<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-size modal-dialog-centered" role="document">
+        <!-- Clase modal-lg para aumentar el tamaño del modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Detalles del Insumo</h5>
+            </div>
+            <div class="modal-body">
+                <!-- El contenido del modal se actualizará mediante JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+
+    .custom-modal-size .modal-dialog {
+        max-width: 800px; /* Ajusta el ancho máximo como prefieras */
+        margin: 30px auto; /* Espaciado vertical si lo deseas */
     }
-}
+
+    .custom-modal-size .modal-content {
+        padding: 20px; /* Ajusta el padding según lo necesites */
+    }
+</style>
+
+<style>
+
+    .custom-modal-size .modal-dialog {
+        max-width: 800px; /* Ajusta el ancho máximo como prefieras */
+        margin: 30px auto; /* Espaciado vertical si lo deseas */
+    }
+
+    .custom-modal-size .modal-content {
+        padding: 20px; /* Ajusta el padding según lo necesites */
+    }
+</style>
+
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
 <link rel="stylesheet" href="~/css/site.css" />
 @section Scripts {
-
+    <script>
+        function showDetailsModal(id) {
+            $.ajax({
+                url: '@Url.Action("Details", "Insumos")', // Asegúrate de que el nombre del controlador es correcto
+                type: 'GET',
+                data: { id: id },
+                success: function (data) {
+                    let content = `
+                        <div>
+                            <h5>Nombre:</h5>
+                            <p>${data.nombreInsumo || 'No disponible'}</p>
+                            <h5>Categoría:</h5>
+                            <p>${data.idCategoriaNavigation || 'No disponible'}</p>
+                            <h5>Tipo:</h5>
+                            <p>${data.categoriaInsumo || 'No disponible'}</p>
+                            <h5>Stock:</h5>
+                            <p>${data.stock || 'No disponible'}</p>
+                            <h5>Estado:</h5>
+                            <p>${data.estado || 'No disponible'}</p>
+                            <h5>Precio Unitario:</h5>
+                            <p>${data.precioUnitario ? `$${data.precioUnitario.toFixed(2)}` : 'No disponible'}</p>
+                        </div>
+                    `;
+                    $('#detailsModal .modal-body').html(content);
+                    $('#detailsModal').modal('show');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading details:", error);
+                    alert("Ocurrió un error al cargar los detalles del insumo.");
+                }
+            });
+        }
+    </script>
 }
+

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace fugaz_retro.Models;
 
@@ -12,16 +13,13 @@ public partial class Proveedor
     public string? Empresa { get; set; } = null!;
 
     public string? RepresentanteLegal { get; set; } = null!;
-
     public int? Rut { get; set; }
 
     public string? NombreCompleto { get; set; }
-
     public string? Documento { get; set; }
 
-    public string Telefono { get; set; } = null!;
-
-    public string Direccion { get; set; } = null!;
+     public string Telefono { get; set; } = null!;
+    public string DireccionAlternativa { get; set; }
 
     public bool Estado { get; set; }
 

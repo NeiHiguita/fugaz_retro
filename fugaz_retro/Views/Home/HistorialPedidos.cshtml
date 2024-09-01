@@ -1,4 +1,4 @@
-﻿    @model IEnumerable<fugaz_retro.Models.DetallePedido>
+﻿@model IEnumerable<fugaz_retro.Models.DetallePedido>
 
 @{
     ViewData["Title"] = "Historial de pedidos";
@@ -70,9 +70,9 @@
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="pedidoModal" tabindex="-1" aria-labelledby="pedidoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-md">
-            <div class="modal-content">
+        <div class="modal fade" id="pedidoModal" tabindex="-1" aria-labelledby="pedidoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="pedidoModalLabel">Detalles del Pedido</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -243,16 +243,24 @@
                     success: function (result) {
                         // Construir HTML de detalles del pedido
                         result.forEach(function (detalle, index) {
+                            var fotoSrc = detalle.fotoProducto ? `data:image/jpeg;base64,${detalle.fotoProducto}` : '/path/to/default-image.jpg';
                             var detalleHTML = `
-                                        <div class="pedido-detalle">
-                                            <h5>Detalle del Pedido ${index + 1}</h5>
-                                            <p><strong>Cantidad:</strong> ${detalle.cantidad}</p>
-                                            <p><strong>Talla:</strong> ${detalle.talla}</p>
-                                            <p><strong>Color:</strong> ${detalle.color}</p>
-                                            <p><strong>Subtotal:</strong> $${detalle.subtotal}</p>
-                                            <hr>
-                                        </div>
-                                    `;
+                                           <div class="pedido-detalle" style="display: flex; align-items: center; margin-bottom: 20px;">
+                                               <div class="detalle-info" style="flex: 2;">
+                                                   <h5>Pedido ${index + 1}</h5>
+                                                   <p><strong>Producto:</strong> ${detalle.nombreProducto}</p>
+                                                   <p><strong>Precio del producto:</strong> ${detalle.precio}</p>
+                                                   <p><strong>Cantidad:</strong> ${detalle.cantidad}</p>
+                                                   <p><strong>Talla:</strong> ${detalle.talla}</p>
+                                                   <p><strong>Color:</strong> ${detalle.color}</p>
+                                                   <p><strong>Subtotal:</strong> $${detalle.subtotal}</p>
+                                               </div>
+                                               <div class="detalle-foto" style="flex: 1; text-align: right;">
+                                                   <img src="${fotoSrc}" alt="${detalle.nombreProducto}" style="max-width: 500px; max-height: 500px; object-fit: cover; border: 1px solid #ccc;">
+                                               </div>
+                                           </div>
+                                           <hr>
+                                        `;
                             detallesPedidosElem.append(detalleHTML);
                         });
                     },

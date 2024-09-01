@@ -4,9 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fugaz_retro.Controllers
 {
+    [Authorize]
+    [PermisosFilter("Modulo Ventas")]
+
     public class DetalleInsumosController : Controller
     {
         private readonly FugazContext _context;

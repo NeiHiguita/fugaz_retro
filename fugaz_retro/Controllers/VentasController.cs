@@ -13,6 +13,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Ventas")]
     public class VentasController : Controller
     {
         private readonly FugazContext _context;

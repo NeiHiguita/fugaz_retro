@@ -4,9 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fugaz_retro.Controllers
 {
+    [Authorize]
+    [PermisosFilter("Modulo Ventas")]
+
     public class DetalleProductosController : Controller
     {
         private readonly FugazContext _context;
@@ -16,14 +20,28 @@ namespace fugaz_retro.Controllers
             _context = context;
         }
 
-        // GET: DetalleProductos
         public async Task<IActionResult> Index()
         {
-            var fugazContext = _context.DetalleProductos.Include(u => u.Producto);
-            return View(await fugazContext.ToListAsync());
+            var detalleProductos = await _context.DetalleProductos
+                .Include(d => d.Producto)
+                .ToListAsync();
+
+            var groupedData = detalleProductos
+                .GroupBy(d => d.Producto)
+                .Select(g => new
+                {
+                    Producto = g.Key,
+                    Tallas = g.Where(d => !string.IsNullOrEmpty(d.Talla)).Select(d => d.Talla).Distinct().ToList(),
+                    Colores = g.Where(d => !string.IsNullOrEmpty(d.Color)).Select(d => d.Color).Distinct().ToList()
+                })
+                .ToList();
+
+            ViewBag.GroupedData = groupedData;
+
+            return View();
         }
 
-        // GET: DetalleProducto/Details/5
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -31,16 +49,32 @@ namespace fugaz_retro.Controllers
                 return NotFound();
             }
 
-            var detalleProducto = await _context.DetalleProductos
-                .Include(d => d.Producto)
-                .FirstOrDefaultAsync(m => m.IdDetalleProducto == id);
+            var producto = await _context.Productos
+                .Include(p => p.DetalleProductos)
+                .FirstOrDefaultAsync(p => p.IdProducto == id);
 
-            if (detalleProducto == null)
+            if (producto == null)
             {
                 return NotFound();
             }
 
-            return View(detalleProducto);
+            var tallas = producto.DetalleProductos
+                .Where(d => !string.IsNullOrEmpty(d.Talla))
+                .Select(d => d.Talla)
+                .AsEnumerable()
+                .ToList();
+
+            var colores = producto.DetalleProductos
+                .Where(d => !string.IsNullOrEmpty(d.Color))
+                .Select(d => d.Color)
+                .AsEnumerable()
+                .ToList();
+
+            ViewBag.Producto = producto;
+            ViewBag.Tallas = tallas;
+            ViewBag.Colores = colores;
+
+            return View();
         }
 
 

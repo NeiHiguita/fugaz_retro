@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
-
+    [PermisosFilter("Modulo Configuracion")]
     public class RolesController : Controller
     {
         private readonly FugazContext _context;
@@ -24,10 +24,14 @@ namespace fugaz_retro.Controllers
         // GET: Roles
         public async Task<IActionResult> Index()
         {
-              return _context.Roles != null ? 
-                          View(await _context.Roles.ToListAsync()) :
-                          Problem("Entity set 'FugazContext.Roles'  is null.");
+            var roles = await _context.Roles
+                .Include(r => r.RolPermisos)
+                    .ThenInclude(rp => rp.IdPermisoNavigation)
+                .ToListAsync();
+
+            return View(roles);
         }
+
 
         // GET: Roles/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -47,50 +51,92 @@ namespace fugaz_retro.Controllers
             return View(role);
         }
 
-        // GET: Roles/Create
+        [HttpGet]
         public IActionResult Create()
         {
+            ViewBag.Permisos = _context.Permisos.ToList();
             return View();
         }
 
-        // POST: Roles/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdRol,NombreRol")] Role role)
+        public async Task<IActionResult> Create(Role role, List<int> SelectedPermisos)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(role);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    role.Estado = true; // Estado inicial del rol como activo
+                    _context.Roles.Add(role);
+                    await _context.SaveChangesAsync();
+
+                    // Asignar permisos seleccionados al rol
+                    foreach (var permisoId in SelectedPermisos)
+                    {
+                        var rolPermiso = new RolPermiso
+                        {
+                            IdRol = role.IdRol,
+                            IdPermiso = permisoId
+                        };
+                        _context.RolPermisos.Add(rolPermiso);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    // Log del error
+                    Console.WriteLine($"Error: {ex.Message}");
+                    ModelState.AddModelError("", $"Error al crear el rol: {ex.Message}");
+                }
             }
+
+            // Si algo falla, se vuelve a cargar la lista de permisos
+            ViewBag.Permisos = await _context.Permisos.ToListAsync();
             return View(role);
         }
-
-        // GET: Roles/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpPost]
+        public async Task<IActionResult> ToggleRoleStatus(int idRol, bool estado)
         {
-            if (id == null || _context.Roles == null)
+            var rol = await _context.Roles.FindAsync(idRol);
+            if (rol == null)
             {
                 return NotFound();
             }
 
-            var role = await _context.Roles.FindAsync(id);
+            rol.Estado = estado;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var role = await _context.Roles
+                .Include(r => r.RolPermisos)
+                .FirstOrDefaultAsync(m => m.IdRol == id);
             if (role == null)
             {
                 return NotFound();
             }
+
+            ViewBag.Permisos = _context.Permisos.ToList();
             return View(role);
         }
 
-        // POST: Roles/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdRol,NombreRol")] Role role)
+        public async Task<IActionResult> Edit(int id, Role role, List<int> SelectedPermisos)
         {
             if (id != role.IdRol)
             {
@@ -103,21 +149,35 @@ namespace fugaz_retro.Controllers
                 {
                     _context.Update(role);
                     await _context.SaveChangesAsync();
+
+                    // Actualizar los permisos del rol
+                    var existingPermisos = _context.RolPermisos.Where(rp => rp.IdRol == role.IdRol).ToList();
+                    _context.RolPermisos.RemoveRange(existingPermisos);
+
+                    foreach (var permisoId in SelectedPermisos)
+                    {
+                        var rolPermiso = new RolPermiso
+                        {
+                            IdRol = role.IdRol,
+                            IdPermiso = permisoId
+                        };
+                        _context.RolPermisos.Add(rolPermiso);
+                    }
+                    await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex)
                 {
-                    if (!RoleExists(role.IdRol))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    ModelState.AddModelError("", $"Error al actualizar el rol: {ex.Message}");
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Permisos = _context.Permisos.ToList();
             return View(role);
+        }
+
+        private bool RoleExists(int id)
+        {
+            return _context.Roles.Any(e => e.IdRol == id);
         }
 
         // GET: Roles/Delete/5
@@ -152,10 +212,11 @@ namespace fugaz_retro.Controllers
             {
                 _context.Roles.Remove(role);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
         // GET: Roles/GetRoleDetails/5
         public async Task<IActionResult> GetRoleDetails(int? id)
         {
@@ -182,20 +243,36 @@ namespace fugaz_retro.Controllers
                 return Problem("Entity set 'FugazContext.Roles' is null.");
             }
 
-            var role = await _context.Roles.FindAsync(id);
+            var role = await _context.Roles.Include(r => r.RolPermisos).FirstOrDefaultAsync(r => r.IdRol == id);
             if (role == null)
             {
                 return NotFound();
             }
 
-            _context.Roles.Remove(role);
-            await _context.SaveChangesAsync();
+            // Eliminar permisos asociados al rol
+            var permisosAsociados = _context.RolPermisos.Where(rp => rp.IdRol == role.IdRol);
+            _context.RolPermisos.RemoveRange(permisosAsociados);
 
-            return Ok();
-        }
-        private bool RoleExists(int id)
-        {
-          return (_context.Roles?.Any(e => e.IdRol == id)).GetValueOrDefault();
+            try
+            {
+                // Intentar eliminar el rol
+                _context.Roles.Remove(role);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (DbUpdateException ex)
+            {
+                // Verificar si el error está relacionado con la clave externa (asociado a usuarios)
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("foreign key"))
+                {
+                    return StatusCode(409, "No se puede eliminar el rol porque está asociado a un usuario.");
+                }
+                else
+                {
+                    // Si es otro error, mostrar el mensaje genérico
+                    return StatusCode(500, "Ocurrió un error al intentar eliminar el rol.");
+                }
+            }
         }
 
     }

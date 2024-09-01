@@ -7,57 +7,49 @@
 
 <div class="tbl">
     <h4>Editar Usuario</h4>
-    <div class="col-md-6">
+    <div class="col-md-12">
         <form asp-action="Edit" method="post">
             <div class="row">
-                <div class="col-sm-6">
-                    <input type="hidden" asp-for="IdUsuario" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <label asp-for="NombreUsuario" class="control-label">Nombre del Usuario</label>
-                        <input asp-for="NombreUsuario" class="form-control" />
-                        <span asp-validation-for="NombreUsuario" class="text-danger"></span>
-                    </div>
+                <input type="hidden" asp-for="IdUsuario" />
+                <div asp-validation-summary="ModelOnly" class="text-danger col-12"></div>
 
-                    <div class="form-group">
-                        <label asp-for="Correo" class="control-label disabled">Correo</label>
-                        <input asp-for="Correo" class="form-control" />
-                        <span asp-validation-for="Correo" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Contraseña" class="control-label">Contraseña</label>
-                        <input asp-for="Contraseña" class="form-control" />
-                        <span asp-validation-for="Contraseña" class="text-danger"></span>
-                    </div>
+                <div class="form-group col-md-6">
+                    <label asp-for="IdRol" class="control-label">Rol</label>
+                    <select asp-for="IdRol" class="form-control" asp-items="ViewBag.IdRol" id="roleSelect"></select>
+                    <span asp-validation-for="IdRol" class="text-danger"></span>
                 </div>
-                <div class="col-sm-6">
 
-
-                    <div class="form-group">
-                        <label asp-for="Document" class="control-label">Documento</label>
-                        <input asp-for="Document" class="form-control" />
-                        <span asp-validation-for="Document" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Cliente.Telefono" class="control-label">Teléfono</label>
-                        <input name="Telefono" class="form-control" value="@Model.Cliente?.Telefono" />
-                        <span asp-validation-for="Cliente.Telefono" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="IdRol" class="control-label">Rol</label>
-                        <select asp-for="IdRol" class="form-control" asp-items="ViewBag.IdRol"></select>
-                        <span asp-validation-for="IdRol" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group form-check form-switch">
-                        <label class="form-check-label">
-                            <input class="form-check-input" asp-for="Estado" /> @Html.DisplayNameFor(model => model.Estado)
-                        </label>
-                    </div>
+                <div class="form-group col-md-6">
+                    <label asp-for="NombreUsuario" class="control-label">Nombre del Usuario</label>
+                    <input asp-for="NombreUsuario" class="form-control" maxlength="40"/>
+                    <span asp-validation-for="NombreUsuario" class="text-danger"></span>
                 </div>
+
+                <div class="form-group col-md-6">
+                    <label asp-for="Correo" class="control-label">Correo</label>
+                    <input asp-for="Correo" class="form-control" maxlength="40" disabled/>
+                    <span asp-validation-for="Correo" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label asp-for="Contraseña" class="control-label">Contraseña</label>
+                    <input asp-for="Contraseña" class="form-control" maxlength="15"/>
+                    <span asp-validation-for="Contraseña" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label asp-for="Document" class="control-label">Documento</label>
+                    <input asp-for="Document" class="form-control" maxlength="10"/>
+                    <span asp-validation-for="Document" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-6" id="telefonoField" style="display:none;">
+                    <label asp-for="Cliente.Telefono" class="control-label">Teléfono</label>
+                    <input name="Telefono" class="form-control" id="telefonoInput" value="@Model.Cliente?.Telefono" maxlength="10"/>
+                    <span asp-validation-for="Cliente.Telefono" class="text-danger"></span>
+                </div>
+
+                <input asp-for="Estado" type="hidden" />
             </div>
             <br />
             <div class="form-group">
@@ -75,13 +67,13 @@
     }
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
-        document.getElementById('roleSelect').addEventListener('change', function () {
-            var roleSelect = document.getElementById('roleSelect');
+        document.getElementById('IdRol').addEventListener('change', function () {
+            var roleSelect = document.getElementById('IdRol');
             var telefonoField = document.getElementById('telefonoField');
             var telefonoInput = document.getElementById('telefonoInput');
             var selectedRole = roleSelect.options[roleSelect.selectedIndex].text;
 
-            if (selectedRole !== 'Administrador') {
+            if (selectedRole === 'Cliente') {
                 telefonoField.style.display = 'block';
                 telefonoInput.value = '';
             } else {
@@ -90,6 +82,6 @@
             }
         });
 
-        document.getElementById('roleSelect').dispatchEvent(new Event('change'));
+        document.getElementById('IdRol').dispatchEvent(new Event('change'));
     </script>
 }

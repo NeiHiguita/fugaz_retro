@@ -4,11 +4,9 @@
     ViewData["Title"] = "Editar";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
 <div class="tbl">
-    <h1>Editar</h1>
-
-    <h4>Pedido</h4>
+<div class="container">
+    <h1>Editar Pedido</h1>
     <hr />
 
     <form id="editForm" asp-action="Edit" enctype="multipart/form-data">
@@ -16,15 +14,17 @@
             <div class="col-md-6">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="IdPedido" />
-                <input type="hidden" asp-for="IdCliente" /> 
+                <input type="hidden" asp-for="IdCliente" />
+
                 <div class="form-group">
                     <label class="control-label">Cliente</label>
                     <input type="text" class="form-control" value="@ViewBag.ClienteNombre" readonly />
                 </div>
-                <input type="hidden" asp-for="Ciudad" />                
+
                 <input type="hidden" asp-for="Direccion" />
+
                 <div class="form-group">
-                    <label asp-for="Estado" class="control-label"></label>
+                    <label asp-for="Estado" class="control-label">Estado</label>
                     <select asp-for="Estado" class="form-control">
                         <option value="">Seleccionar Estado</option>
                         <option value="En proceso">En proceso</option>
@@ -33,7 +33,8 @@
                     </select>
                     <span asp-validation-for="Estado" class="text-danger"></span>
                 </div>
-                <div class="form-group d-none" id="tipoTransferenciaDiv" style="display: none;">
+
+                <div class="form-group d-none" id="tipoTransferenciaDiv">
                     <label asp-for="TipoTransferencia" class="control-label">Tipo de Transferencia</label>
                     <select asp-for="TipoTransferencia" class="form-control" id="TipoTransferencia" name="TipoTransferencia">
                         <option value="">Tipo de Transferencia</option>
@@ -42,22 +43,15 @@
                         <option value="Daviplata">Daviplata</option>
                     </select>
                 </div>
+            </div>
 
+            <div class="col-md-6">
                 <div class="form-group">
-                    <label asp-for="MetodoPago" class="control-label"></label>
-                    <input asp-for="MetodoPago" class="form-control" readonly />
-                    <span asp-validation-for="MetodoPago" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="FechaPedido" class="control-label"></label>
-                    <input asp-for="FechaPedido" class="form-control" readonly />
-                    <span asp-validation-for="FechaPedido" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="FechaEntrega" class="control-label"></label>
+                    <label asp-for="FechaEntrega" class="control-label">Fecha de Entrega</label>
                     <input asp-for="FechaEntrega" class="form-control" />
                     <span asp-validation-for="FechaEntrega" class="text-danger"></span>
                 </div>
+
                 <div class="form-group d-none">
                     <label asp-for="CostoPedido" class="control-label">Costo del Pedido</label>
                     <input asp-for="CostoPedido" id="CostoPedido" class="form-control" readonly />
@@ -69,32 +63,25 @@
                     <input asp-for="CostoEnvio" id="CostoEnvio" class="form-control" />
                     <span asp-validation-for="CostoEnvio" class="text-danger"></span>
                 </div>
+
                 <div class="form-group d-none">
                     <label asp-for="Descuento" class="control-label">Descuento</label>
                     <input asp-for="Descuento" id="Descuento" class="form-control" />
                     <span asp-validation-for="Descuento" class="text-danger"></span>
                 </div>
-                <div class="form-group d-none">
-                    <label asp-for="Iva" class="control-label">IVA</label>
-                    <input asp-for="Iva" id="Iva" class="form-control" readonly />
-                    <span asp-validation-for="Iva" class="text-danger"></span>
-                </div>
 
                 <div class="form-group">
-                    <label asp-for="TotalPedido" class="control-label"></label>
+                    <label asp-for="TotalPedido" class="control-label">Total del Pedido</label>
                     <input asp-for="TotalPedido" class="form-control" readonly />
                     <span asp-validation-for="TotalPedido" class="text-danger"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="comprobantePago" class="control-label">Comprobante de Pago</label>
-                    <input type="file" name="comprobantePago" id="comprobantePago" class="form-control" />
-                    <span asp-validation-for="ComprobantePago" class="text-danger"></span>
-                </div>
-            </div>
-                <div class="col-sm-6">
                     <img class="imgproduct" id="ComprobantePagoPreview" src="@("data:image;base64," + (Model.ComprobantePago != null ? Convert.ToBase64String(Model.ComprobantePago) : ""))" alt="Comprobante de Pago" style="max-width: 400px; max-height: 400px; margin-left:12%; display: @(Model.ComprobantePago != null && Model.ComprobantePago.Length > 0 ? "block" : "none");" />
                 </div>
+            </div>
         </div>
+
         <h4>Detalles del Pedido</h4>
         <table class="table table-striped table-bordered text-center">
             <thead>
@@ -118,14 +105,14 @@
             </tbody>
         </table>
 
-        <br />
         <div class="form-group">
-            <br />
             <input type="submit" value="Guardar" class="btn btn-sm btn-primary" />
             <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
         </div>
     </form>
 </div>
+</div>
+
 
 @section Scripts {
     @{
@@ -167,6 +154,7 @@
         //             console.error('Error:', error);
         //         });
         // });
+
         document.addEventListener('DOMContentLoaded', function () {
             var estadoSelect = document.querySelector('select[asp-for="Estado"]');
             var tipoTransferenciaDiv = document.querySelector('#tipoTransferenciaDiv');

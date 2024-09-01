@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,10 +70,11 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
 
+            [Required]
+            [Display(Name = "Nombre de Usuario")]
             public string UserName { get; set; }
             public string Document { get; set; }
             public string Telefono { get; set; }
-
         }
 
 
@@ -88,13 +88,13 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-
                 user.EmailConfirmed = true;
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
@@ -102,6 +102,7 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
+
                     var existingUserWithEmail = await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == Input.Email);
                     if (existingUserWithEmail != null)
                     {
@@ -127,7 +128,6 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
                     };
 
                     _context.Usuarios.Add(newUser);
-
                     await _context.SaveChangesAsync();
 
                     var usuarioId = newUser.IdUsuario;
@@ -142,7 +142,7 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
                     await _context.SaveChangesAsync();
 
                     var userId = await _userManager.GetUserIdAsync(user);
-                    var code = true;
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
@@ -150,12 +150,11 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
                         protocol: Request.Scheme);
 
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Por favor confirma tu correo <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>Click aquí</a>.");
-
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     return LocalRedirect(returnUrl);
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
@@ -164,6 +163,9 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
 
             return Page();
         }
+
+
+
 
         private IdentityUser CreateUser()
         {

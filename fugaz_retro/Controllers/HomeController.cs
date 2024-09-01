@@ -12,37 +12,56 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using fugaz_retro.Services;
+using System.Text;
+using BCrypt.Net;
+
 
 namespace fugaz_retro.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly FugazContext _context;
+        private readonly ILogger<HomeController> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IEmailService _emailService;
 
-        public HomeController(ILogger<HomeController> logger, FugazContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public HomeController(
+            ILogger<HomeController> logger,
+            FugazContext context,
+            UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
+            IEmailService emailService)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailService = emailService;
         }
 
         public IActionResult Index()
         {
             var userEmail = User.Identity.Name;
+            List<Producto> nuevasTendencias, masVendidos, restoProductos;
 
-            // Verificar si el correo del usuario está presente y no es nulo o cadena vacía
             if (string.IsNullOrEmpty(userEmail))
             {
-                // Si no hay correo de usuario, mostrar el índice sin nombre de cliente
+                var productos = _context.Productos
+                    .Include(p => p.DetalleProductos)
+                    .ToList();
+
+                nuevasTendencias = productos.Take(3).ToList();
+                masVendidos = productos.Skip(3).Take(3).ToList();
+                restoProductos = productos.Skip(6).ToList();
+
                 var viewModel = new ProductoViewModel
                 {
-                    Productos = _context.Productos
-                        .Include(p => p.DetalleProductos)
-                        .ToList()
+                    Productos = productos,
+                    NuevasTendencias = nuevasTendencias,
+                    MasVendidos = masVendidos,
+                    RestoProductos = restoProductos
                 };
 
                 var detalleProductos = _context.DetalleProductos
@@ -59,28 +78,37 @@ namespace fugaz_retro.Controllers
                     Color = $"{dp.Color}"
                 }).ToList();
 
-                // No establecer ViewBag.NombreCliente si no hay usuario logueado
                 return View(viewModel);
             }
 
-            // Si hay correo de usuario, intentar encontrar el usuario en la base de datos
-            var usuario = _context.Usuarios.FirstOrDefault(u => u.Correo == userEmail);
+            var usuario = _context.Usuarios
+                .Include(u => u.Cliente)
+                .FirstOrDefault(u => u.Correo == userEmail);
+
             if (usuario == null)
             {
-                // Mostrar un mensaje o redireccionar según tu caso de uso
                 return NotFound("Usuario no encontrado");
             }
 
+            var productosConUsuario = _context.Productos
+                .Include(p => p.DetalleProductos)
+                .ToList();
+
+            nuevasTendencias = productosConUsuario.Take(3).ToList();
+            masVendidos = productosConUsuario.Skip(3).Take(3).ToList();
+            restoProductos = productosConUsuario.Skip(6).ToList();
+
             var viewModelWithUser = new ProductoViewModel
             {
-                Productos = _context.Productos
-                    .Include(p => p.DetalleProductos)
-                    .ToList()
+                Productos = productosConUsuario,
+                NuevasTendencias = nuevasTendencias,
+                MasVendidos = masVendidos,
+                RestoProductos = restoProductos
             };
 
             var detalleProductosWithUser = _context.DetalleProductos
                 .Include(dp => dp.Producto)
-                .Where(dp => dp.Talla != null && dp.Color != null)
+                .Where(dp => dp.Talla == null && dp.Color == null)
                 .ToList();
 
             ViewBag.DetalleProductos = detalleProductosWithUser.Select(dp => new
@@ -93,6 +121,7 @@ namespace fugaz_retro.Controllers
             }).ToList();
 
             ViewBag.NombreCliente = usuario.NombreUsuario;
+            ViewBag.TelefonoCliente = usuario.Cliente?.Telefono;
 
             return View(viewModelWithUser);
         }
@@ -145,19 +174,37 @@ namespace fugaz_retro.Controllers
                 .Include(p => p.DetalleProductos)
                 .ToListAsync();
 
-            return View("Index", new ProductoViewModel { Productos = productos });
+            var viewModel = new ProductoViewModel
+            {
+                Productos = productos,
+                NuevasTendencias = productos.Take(3).ToList(),
+                MasVendidos = productos.Skip(3).Take(3).ToList(),
+                RestoProductos = productos.Skip(6).ToList()
+            };
+
+            return View("Index", viewModel);
         }
 
         public async Task<IActionResult> Buscar(string query)
         {
+            query = query.ToLower();
+
             var productos = await _context.Productos
-                .Where(p => p.NombreProducto.Contains(query))
                 .Include(p => p.DetalleProductos)
+                .Where(p => p.NombreProducto.ToLower().Contains(query) ||
+                            p.DetalleProductos.Any(dp => dp.Color.ToLower().Contains(query)))
                 .ToListAsync();
 
-            return View("Index", new ProductoViewModel { Productos = productos });
-        }
+            var viewModel = new ProductoViewModel
+            {
+                Productos = productos,
+                NuevasTendencias = productos.Take(3).ToList(),
+                MasVendidos = productos.Skip(3).Take(3).ToList(),
+                RestoProductos = productos.Skip(6).ToList()
+            };
 
+            return View("Index", viewModel);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CrearPedido(Pedido pedido, string detallesPedidoJson, IFormFile? comprobantePago)
@@ -264,26 +311,63 @@ namespace fugaz_retro.Controllers
         [HttpGet]
         public async Task<IActionResult> DetallesPedido(int pedidoId)
         {
-            var detalles = await _context.DetallePedidos
-                //.Include(dp => dp.IdDetalleProductoNavigation) // Navegar desde DetallePedido a DetalleProducto
-                //.ThenInclude(dp => dp.Producto)
-                .Where(dp => dp.IdPedido == pedidoId)
-                .Select(dp => new
-                {
-                    dp.Cantidad,
-                    dp.talla,
-                    dp.color,
-                    dp.Subtotal,
-                    dp.IdPedidoNavigation.ComprobantePago
-                })
-                .ToListAsync();
-
-            if (detalles == null || !detalles.Any())
+            try
             {
-                return NotFound();
-            }
+                var detalles = await _context.DetallePedidos
+                    .Where(dp => dp.IdPedido == pedidoId)
+                    .Select(dp => new
+                    {
+                        dp.Cantidad,
+                        dp.talla,
+                        dp.color,
+                        dp.Subtotal,
+                        ComprobantePago = dp.IdPedidoNavigation.ComprobantePago,
+                        dp.IdDetalleProducto // Obtén solo el ID del producto aquí
+                    })
+                    .ToListAsync();
 
-            return Json(detalles);
+                if (detalles == null || !detalles.Any())
+                {
+                    return NotFound();
+                }
+
+                var resultado = new List<object>();
+
+                foreach (var detalle in detalles)
+                {
+                    var producto = await _context.Productos
+                        .Where(p => p.IdProducto == detalle.IdDetalleProducto)
+                        .Select(p => new
+                        {
+                            p.NombreProducto,
+                            p.PrecioVenta,
+                            p.Foto 
+                        })
+                        .FirstOrDefaultAsync();
+
+                    string fotoBase64 = producto?.Foto != null ? Convert.ToBase64String(producto.Foto) : null;
+                    string comprobanteBase64 = detalle.ComprobantePago != null ? Convert.ToBase64String(detalle.ComprobantePago) : null;
+
+                    resultado.Add(new
+                    {
+                        cantidad = detalle.Cantidad,
+                        talla = detalle.talla,
+                        color = detalle.color,
+                        subtotal = detalle.Subtotal,
+                        nombreProducto = producto?.NombreProducto,
+                        precio=producto?.PrecioVenta,
+                        fotoProducto = fotoBase64, 
+                        comprobantePago = comprobanteBase64 
+                    });
+                }
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error en DetallesPedido: " + ex.Message);
+                return StatusCode(500, "Ocurrió un error al procesar la solicitud.");
+            }
         }
 
         //MIS PEDIDOS
@@ -296,7 +380,6 @@ namespace fugaz_retro.Controllers
                 return RedirectToAction("Login", "Account"); // Redirigir al usuario a la página de inicio de sesión
             }
 
-            // Obtener el cliente asociado al usuario actual
             var usuarioCorreo = User.Identity.Name;
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == usuarioCorreo);
 
@@ -312,7 +395,6 @@ namespace fugaz_retro.Controllers
                 return RedirectToAction("Error", "Home"); // Redirigir a una página de error
             }
 
-            // Filtrar los detalles de los pedidos según el estado (si se especifica)
             IQueryable<DetallePedido> detallesQuery = _context.DetallePedidos
                 .Include(dp => dp.IdPedidoNavigation)
                 .Where(dp => dp.IdPedidoNavigation.IdCliente == cliente.IdCliente);
@@ -327,10 +409,8 @@ namespace fugaz_retro.Controllers
                 detallesQuery = detallesQuery.Where(dp => dp.IdPedidoNavigation.Estado == "En proceso");
             }
 
-            // Cargar los detalles de los pedidos
             var detalles = await detallesQuery.ToListAsync();
 
-            // Pasar el estado seleccionado a la vista
             ViewBag.Estado = estado;
 
             return View(detalles);
@@ -428,11 +508,13 @@ namespace fugaz_retro.Controllers
             return View();
         }
 
-        //Miperfil
+        //Miperfil ------------------------------------------------------
+        [HttpGet]
+        [Route("Home/Miperfil")]
         public async Task<IActionResult> Miperfil()
         {
             var userEmail = User.Identity.Name;
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == userEmail);
+            var usuario = await _context.Usuarios.Include(u => u.Cliente).FirstOrDefaultAsync(u => u.Correo == userEmail);
 
             if (usuario == null)
             {
@@ -449,33 +531,49 @@ namespace fugaz_retro.Controllers
             ViewBag.NombreUsuario = usuario.NombreUsuario;
             ViewBag.Correo = usuario.Correo;
             ViewBag.Document = usuario.Document;
+            ViewBag.Telefono = usuario.Cliente?.Telefono;
             ViewBag.AspNetUserId = aspNetUser.Id;
 
             return View();
         }
+        //----------------------------------------------------------------
 
         [HttpPost]
-        public async Task<IActionResult> Miperfil(int idUsuario, string nombreUsuario, string document)
+        [Route("Home/Miperfil")]
+        public async Task<IActionResult> Miperfil(int idUsuario, string nombreUsuario, string telefono)
         {
             if (ModelState.IsValid)
             {
-                var usuario = await _context.Usuarios.FindAsync(idUsuario);
+                var usuario = await _context.Usuarios.Include(u => u.Cliente).FirstOrDefaultAsync(u => u.IdUsuario == idUsuario);
                 if (usuario == null)
                 {
                     return NotFound("Usuario no encontrado");
                 }
 
-                // Actualizar los datos en la tabla Usuario
+                // Actualizar Usuario
                 usuario.NombreUsuario = nombreUsuario;
-                usuario.Document = document;
-                _context.Usuarios.Update(usuario);
 
+                if (usuario.Cliente != null)
+                {
+                    usuario.Cliente.Telefono = telefono;
+                }
+                else
+                {
+                    usuario.Cliente = new Cliente
+                    {
+                        IdUsuario = idUsuario,
+                        Telefono = telefono
+                    };
+                }
+
+                _context.Usuarios.Update(usuario);
                 await _context.SaveChangesAsync();
 
                 ViewBag.IdUsuario = usuario.IdUsuario;
                 ViewBag.NombreUsuario = usuario.NombreUsuario;
                 ViewBag.Correo = usuario.Correo;
                 ViewBag.Document = usuario.Document;
+                ViewBag.Telefono = usuario.Cliente.Telefono;
 
                 ViewBag.Message = "Perfil actualizado con éxito";
             }
@@ -488,8 +586,8 @@ namespace fugaz_retro.Controllers
         {
             if (newPassword != confirmNewPassword)
             {
-                ModelState.AddModelError("", "Las contraseñas no coinciden");
-                return RedirectToAction("Miperfil", new { mensaje = "Las contraseñas no coinciden" });
+                TempData["ErrorMessage"] = "Las contraseñas no coinciden";
+                return RedirectToAction("Miperfil");
             }
 
             var userEmail = User.Identity.Name;
@@ -497,20 +595,134 @@ namespace fugaz_retro.Controllers
 
             if (aspNetUser == null)
             {
-                return NotFound("Usuario no encontrado");
+                TempData["ErrorMessage"] = "Usuario no encontrado";
+                return RedirectToAction("Miperfil");
             }
 
             var result = await _userManager.ChangePasswordAsync(aspNetUser, currentPassword, newPassword);
 
             if (result.Succeeded)
             {
-                return RedirectToAction("Miperfil", new { mensaje = "Contraseña actualizada con éxito" });
+                TempData["SuccessMessage"] = "Contraseña actualizada con éxito";
             }
             else
             {
-                ModelState.AddModelError("", "Error al cambiar la contraseña");
-                return RedirectToAction("Miperfil", new { mensaje = "Error al cambiar la contraseña" });
+                TempData["ErrorMessage"] = "Error al cambiar la contraseña";
             }
+
+            return RedirectToAction("Miperfil");
         }
+
+        // RECUPERAR CONTRASEÑA
+
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Generar un código de recuperación aleatorio
+            var recoveryCode = new StringBuilder();
+            var random = new Random();
+            for (int i = 0; i < 6; i++)
+            {
+                recoveryCode.Append(random.Next(0, 10));
+            }
+
+            // Buscar el usuario por correo electrónico
+            var user = _context.Usuarios.FirstOrDefault(u => u.Correo == model.Email); // Utiliza tu tabla de usuarios
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Correo electrónico no encontrado.");
+                return View(model);
+            }
+
+            // Guardar el código de recuperación en la base de datos
+            user.RecoveryCode = recoveryCode.ToString();
+            await _context.SaveChangesAsync();
+
+            // Enviar el correo electrónico con el código de recuperación
+            var emailDto = new EmailDTO
+            {
+                Para = model.Email,
+                Asunto = "Código de recuperación de contraseña",
+                Contenido = $"Tu código de recuperación es: {recoveryCode}"
+            };
+            _emailService.SendEmail(emailDto);
+
+            return RedirectToAction("ResetPassword", new { email = model.Email });
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email)
+        {
+            var model = new ResetPasswordViewModel { Email = email };
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Verificar el código de recuperación
+            var user = _context.Usuarios.FirstOrDefault(u => u.RecoveryCode == model.RecoveryCode && u.Correo == model.Email); // Utiliza tu tabla de usuarios
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Código de recuperación inválido.");
+                return View(model);
+            }
+
+            // Actualizar la contraseña del usuario
+            user.Contraseña = BCrypt.Net.BCrypt.HashPassword(model.NewPassword); // Suponiendo que estás usando BCrypt para el hashing de contraseñas
+            user.RecoveryCode = null; // Eliminar el código de recuperación después de su uso
+            await _context.SaveChangesAsync();
+
+            // Actualizar la contraseña en la tabla aspnetusers
+            var aspnetUser = await _userManager.FindByNameAsync(model.Email);
+            if (aspnetUser != null)
+            {
+                await _userManager.RemovePasswordAsync(aspnetUser);
+                await _userManager.AddPasswordAsync(aspnetUser, model.NewPassword);
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult LoadMoreProducts(int skip, int take)
+        {
+            var productos = _context.Productos
+                .Skip(skip)
+                .Take(take)
+                .Select(p => new {
+                    p.IdProducto,
+                    p.NombreProducto,
+                    p.PrecioVenta,
+                    Foto = Convert.ToBase64String(p.Foto) // Asumiendo que Foto es un byte[]
+                })
+                .ToList();
+
+            // Verificar si hay más productos para cargar
+            if (productos.Count == 0)
+            {
+                return Json(new { success = false, message = "No hay más productos." });
+            }
+
+            return Json(productos);
+        }
+
     }
 }

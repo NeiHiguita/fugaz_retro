@@ -1,4 +1,5 @@
 ﻿@model fugaz_retro.Models.Producto
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Editar Producto";
@@ -6,21 +7,20 @@
 }
 
 <div class="tbl">
-    <h1>Editar Producto</h1>
+    <h1>@ViewData["Title"]</h1>
     <hr />
-
     <form asp-action="Edit" method="post" enctype="multipart/form-data">
         <input type="hidden" asp-for="IdProducto" />
         <div class="row">
             <div class="col-sm-6">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group">
-                    <label asp-for="NombreProducto" class="control-label"></label>
+                    <label asp-for="NombreProducto" class="control-label">Nombre Producto</label>
                     <input asp-for="NombreProducto" class="form-control" />
                     <span asp-validation-for="NombreProducto" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="PrecioVenta" class="control-label"></label>
+                    <label asp-for="PrecioVenta" class="control-label">Precio venta</label>
                     <input asp-for="PrecioVenta" class="form-control" />
                     <span asp-validation-for="PrecioVenta" class="text-danger"></span>
                 </div>
@@ -30,7 +30,7 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="CategoriaProducto" class="control-label">Selecciona una categoría:</label>
-                    <select asp-for="CategoriaProducto" class="form-control">
+                    <select asp-for="CategoriaProducto" class="form-control" id="categoriaProducto">
                         <option value="vestidos">Vestidos</option>
                         <option value="faldas">Faldas</option>
                         <option value="mom_pats">Mom Pats</option>
@@ -41,91 +41,231 @@
                     </select>
                     <span asp-validation-for="CategoriaProducto" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Estado" class="control-label">Estado</label>
-                    <select asp-for="Estado" class="form-control">
-                        <option value="">Seleccionar Estado</option>
-                        <option value="Disponible">Disponible</option>
-                        <option value="No Disponible">No Disponible</option>
-                    </select>
-                    <span asp-validation-for="Estado" class="text-danger"></span>
-                </div>
             </div>
-            <div class="col-sm-6">
-                <img class="imgproduct" id="FotoPreview" src="@("data:image;base64," + (Model.Foto != null ? Convert.ToBase64String(Model.Foto) : ""))" alt="Foto Producto" style="max-width: 200px; max-height: 200px; display: @(Model.Foto != null && Model.Foto.Length > 0 ? "block" : "none");" />
+            <div class="col-sm-6 primg">
+                <img class="imgproducted" id="FotoPreview" src="@("data:image;base64," + (Model.Foto != null ? Convert.ToBase64String(Model.Foto) : ""))" alt="Foto Producto" style="display: @(Model.Foto != null && Model.Foto.Length > 0 ? "block" : "none");" />
             </div>
         </div>
-
         <h4>Detalles del Producto</h4>
-        <table class="table table-striped table-bordered" id="detallesTable">
-            <thead>
-                <tr>
-                    <th>Talla</th>
-                    <th>Color</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    int index = 0;
-                }
-
-                @foreach (var detalle in Model.DetalleProductos)
-                {
-                    <tr class="detalleProducto" data-detalle-id="@index">
-                        <td>
-                            <input type="hidden" name="DetalleProductos[@index].IdDetalle" value="@detalle.IdDetalleProducto" />
-                            <input type="text" name="DetalleProductos[@index].Talla" class="form-control" value="@detalle.Talla" />
-                        </td>
-                        <td>
-                            <input type="text" name="DetalleProductos[@index].Color" class="form-control" value="@detalle.Color" />
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm remove-detail">Eliminar</button>
-                        </td>
-                    </tr>
-                    index++;
-                }
-
-            </tbody>
-        </table>
-
+        <div class="row">
+            <div class="col-sm-6">
+                <h5>Tallas</h5>
+                <table class="table table-striped table-bordered" id="tallasTable">
+                    <thead>
+                        <tr>
+                            <th>Talla</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fila para añadir nuevas tallas al principio -->
+                        <tr id="addTallaRow">
+                            <td>
+                                <select id="tallaProducto" class="form-control"></select>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary" onclick="addTalla()">Añadir Talla</button>
+                            </td>
+                        </tr>
+                        <!-- Fila con tallas registradas -->
+                        @foreach (var detalle in Model.DetalleProductos.Where(d => !string.IsNullOrEmpty(d.Talla)))
+                        {
+                            <tr>
+                                <td>
+                                    <input type="text" class="form-control" value="@detalle.Talla" readonly />
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="removeTalla(this)">Eliminar</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-sm-6">
+                <h5>Colores</h5>
+                <table class="table table-striped table-bordered" id="coloresTable">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="addColorRow">
+                            <td>
+                                <input type="text" class="form-control" id="colorProducto" />
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary" onclick="addColor()">Añadir Color</button>
+                            </td>
+                        </tr>
+                        @foreach (var detalle in Model.DetalleProductos.Where(d => !string.IsNullOrEmpty(d.Color)))
+                        {
+                            <tr>
+                                <td>
+                                    <input type="text" class="form-control" value="@detalle.Color" readonly />
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="removeColor(this)">Eliminar</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="tallasHidden">
+            <input type="hidden" id="tallasHiddenInput" name="tallasHiddenInput" />
+        </div>
+        <div id="coloresHidden">
+            <input type="hidden" id="coloresHiddenInput" name="coloresHiddenInput" />
+        </div>
         <div class="form-group-botones">
             <button type="submit" class="btn btn-success">Guardar</button>
             <a asp-action="Index" class="btn btn-secondary">Regresar</a>
-            <button type="button" class="btn btn-primary" id="addDetail">Añadir Detalle</button>
         </div>
     </form>
 </div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript">
+    <script>
         $(document).ready(function () {
-            $('#addDetail').click(function () {
-                var newRow = $('.detalleProducto:first').clone();
-                var newId = $('.detalleProducto').length;
-                newRow.find('input[name^="DetalleProductos"]').each(function () {
-                    var nameAttr = $(this).attr('name');
-                    var newNameAttr = nameAttr.replace(/\[\d+\]/, '[' + newId + ']');
-                    $(this).attr('name', newNameAttr).val('');
-                });
-                newRow.attr('data-detalle-id', newId);
-                newRow.appendTo('#detallesTable tbody');
-            });
-
-            $(document).on('click', '.remove-detail', function () {
-                $(this).closest('tr').remove();
-            });
-
-            $('input[type="file"]').change(function (e) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $('#FotoPreview').attr('src', e.target.result).show();
-                }
-                reader.readAsDataURL(this.files[0]);
-            });
+            $("#tallasHiddenInput").val(JSON.stringify(getTallasFromTable()));
+            $("#coloresHiddenInput").val(JSON.stringify(getColoresFromTable()));
         });
 
+        function getTallasFromTable() {
+            var tallas = [];
+            $("#tallasTable tbody tr:not(#addTallaRow)").each(function () {
+                var talla = $(this).find("input").val();
+                if (talla) {
+                    tallas.push({ Talla: talla });
+                }
+            });
+            return tallas;
+        }
+
+        function getColoresFromTable() {
+            var colores = [];
+            $("#coloresTable tbody tr:not(#addColorRow)").each(function () {
+                var color = $(this).find("input").val();
+                if (color) {
+                    colores.push({ Color: color });
+                }
+            });
+            return colores;
+        }
+
+        const tallasNumericas = ["6", "8", "10", "12", "14", "16"];
+        const tallasTexto = ["XS", "S", "M", "L", "XL", "XXL"];
+        const categoriasTallasNumericas = ["faldas", "mom_pats", "shorts", "conjuntos"];
+
+        function actualizarOpcionesTalla() {
+            const categoria = $("#categoriaProducto").val();
+            const $tallaProducto = $("#tallaProducto");
+
+            $tallaProducto.empty();
+
+            if (categoriasTallasNumericas.includes(categoria)) {
+                tallasNumericas.forEach(talla => {
+                    $tallaProducto.append(new Option(talla, talla));
+                });
+            } else {
+                tallasTexto.forEach(talla => {
+                    $tallaProducto.append(new Option(talla, talla));
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            actualizarOpcionesTalla();
+            $("#categoriaProducto").change(actualizarOpcionesTalla);
+        });
+
+        function addTalla() {
+            var talla = $("#tallaProducto").val();
+
+            if (talla.trim() === '') {
+                alert("Por favor ingrese una talla");
+                return;
+            }
+
+            var tallas = JSON.parse($("#tallasHiddenInput").val() || "[]");
+
+            if (tallas.some(detalle => detalle.Talla === talla)) {
+                alert("La talla ya ha sido agregada");
+                return;
+            }
+
+            var detalle = {
+                Talla: talla,
+                Color: ""
+            };
+
+            tallas.push(detalle);
+            $("#tallasHiddenInput").val(JSON.stringify(tallas));
+
+            var newRow = $("<tr>");
+            newRow.append("<td><input type='text' class='form-control' value='" + talla + "' readonly /></td>");
+            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeTalla(this)'>Eliminar</button></td>");
+
+            $("#tallasTable tbody tr#addTallaRow").after(newRow);
+            $("#tallaProducto").val("");
+        }
+
+        function removeTalla(button) {
+            var row = $(button).closest("tr");
+            var talla = row.find("input").val();
+            var tallas = JSON.parse($("#tallasHiddenInput").val() || "[]");
+
+            tallas = tallas.filter(detalle => detalle.Talla !== talla);
+            $("#tallasHiddenInput").val(JSON.stringify(tallas));
+
+            row.remove();
+        }
+
+        function addColor() {
+            var color = $("#colorProducto").val();
+
+            if (color.trim() === '') {
+                alert("Por favor ingrese un color");
+                return;
+            }
+
+            var colores = JSON.parse($("#coloresHiddenInput").val() || "[]");
+
+            if (colores.some(detalle => detalle.Color === color)) {
+                alert("El color ya ha sido agregado");
+                return;
+            }
+
+            var detalle = {
+                Talla: "",
+                Color: color
+            };
+
+            colores.push(detalle);
+            $("#coloresHiddenInput").val(JSON.stringify(colores));
+
+            var newRow = $("<tr>");
+            newRow.append("<td><input type='text' class='form-control' value='" + color + "' readonly /></td>");
+            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeColor(this)'>Eliminar</button></td>");
+
+            $("#coloresTable tbody tr#addColorRow").after(newRow);
+            $("#colorProducto").val("");
+        }
+
+        function removeColor(button) {
+            var row = $(button).closest("tr");
+            var color = row.find("input").val();
+            var colores = JSON.parse($("#coloresHiddenInput").val() || "[]");
+
+            colores = colores.filter(detalle => detalle.Color !== color);
+            $("#coloresHiddenInput").val(JSON.stringify(colores));
+
+            row.remove();
+        }
     </script>
 }

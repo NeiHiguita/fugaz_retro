@@ -9,6 +9,9 @@
     text-align: center;
     flex: 1;
 }
+.producto-oculto {
+    display: none;
+}
 
 .bienvenido {
     color: #fff;
@@ -38,11 +41,19 @@
     font-family: "Birthstone";
     white-space: nowrap;
     border-right: 2px solid;
-    width: 14ch;
+    width: 12ch;
     animation: typing 2s steps(20), blink 0.5s infinite step-end alternate;
     overflow: hidden;
 }
+.fr img{
+    position:absolute;
+}
 
+.frimg {
+    position: absolute;
+    height:80px;
+    margin-top:-15px;
+}
 @keyframes typing {
     from {
         width: 0;
@@ -65,6 +76,7 @@
     align-items: center;
     background: linear-gradient(to bottom, #e2b091,#efcdb7);
     padding: 5px 20px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
 }
 
 .busqueda {
@@ -173,9 +185,9 @@
 }*/
 .swiper {
     background: #e2ff0900;
-    height: 400px;
-    width: 1050px;
-    top: 20px;
+    height: 430px; /* Aumenta la altura */
+    width: 1100px; /* Aumenta el ancho */
+    margin-top: 20px;
     padding: 70px;
 }
 
@@ -187,18 +199,24 @@
     color: #fff;
 }
 
-.swiper-slide-img {
-    height: 100%;
-    width: 100%;
+    .swiper-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.swiper-button-prev, .swiper-button-next {
+    color: #ccc; /* Cambia este valor al color que desees */
 }
 
-.swiper-button-prev {
-    color: #e9e8e8ec;
+.swiper-pagination-bullet {
+    background: #ccc; /* Cambia este valor al color que desees */
 }
 
-.swiper-button-next {
-    color: #dfdfdfcb;
+.swiper-pagination-bullet-active {
+    background: #ccc; /* Cambia este valor al color que desees */
 }
+
 /*-----------------------------cajas de ventas-------------------------------*/
 .container-cart-icon {
     width: 30px;
@@ -481,3 +499,282 @@ img {
             margin-left: 0; /* Centra los  conos de coraz n en pantallas peque as */
         }
 }
+/*--------------MODAL PEDIDOSSS------*/
+.modal-content-index {
+    background-color: #e9e8e8ec;
+    border-radius: 8px; /* Opcional: para bordes redondeados */
+    border: 0.5px solid #dcdcdc; /* Opcional: para un borde suave */
+}
+
+    .modal-content-index .modal-header {
+        background-color: #f8f9fa; /* Cambia el color del encabezado si lo deseas */
+        border-bottom: 1px solid #bcbcbc; /* Opcional: para un borde inferior en el encabezado */
+    }
+
+    .modal-content-index .modal-title {
+        color: #333; /* Cambia el color del título si lo deseas */
+    }
+
+    .modal-content-index .modal-body {
+        padding: 20px; /* Ajusta el relleno según sea necesario */
+    }
+
+    .modal-content-index .modal-footer {
+        border-top: 1px solid #dee2e6; /* Opcional: para un borde superior en el pie de página */
+    }
+
+/* Estilos para la tabla en el modal */
+.table-index {
+    border-collapse: separate; /* Separar bordes de las celdas */
+    border-spacing: 0 0.5rem; /* Espaciado entre filas */
+    margin-bottom: 0; /* Eliminar margen inferior de la tabla */
+}
+
+    .table-index th,
+    .table-index td {
+        padding: 1rem; /* Espaciado en celdas */
+        text-align: center; /* Alinear texto al centro */
+    }
+
+    .table-index thead th {
+        background-color: #343a40; /* Fondo oscuro para el encabezado de la tabla */
+        color: #fff; /* Texto blanco para el encabezado */
+    }
+
+    .table-index tbody tr:nth-child(odd) {
+        background-color: #f8f9fa; /* Fondo alternado para filas */
+    }
+
+    .table-index tbody tr:nth-child(even) {
+        background-color: #fff; /* Fondo blanco para filas */
+    }
+
+    .table-index td {
+        border: 1px solid #dee2e6; /* Borde ligero alrededor de las celdas */
+    }
+
+    .table-index th {
+        border-bottom: 2px solid #dee2e6; /* Línea inferior para el encabezado */
+    }
+
+
+.btn-close {
+    background: none; /* Sin fondo para el botón de cierre */
+    border: none; /* Sin borde */
+    font-size: 1.5rem; /* Tamaño de fuente grande para el ícono de cierre */
+}
+
+
+/* Estilo para los mensajes de pago */
+.mensaje-pago {
+    position: relative; /* Necesario para el icono flotante */
+    padding: 1rem;
+    padding-left: 3rem; /* Espacio para el icono */
+    border-radius: 0.375rem;
+    background-color: #e9f5f9; /* Fondo azul claro */
+    border: 1px solid #b6e0f7; /* Borde azul claro */
+    color: #1f4f71; /* Texto azul oscuro */
+    display: flex; /* Usar flexbox para alinear icono y texto */
+    align-items: center; /* Alinear icono y texto verticalmente */
+}
+
+    .mensaje-pago i {
+        font-size: 1.5rem; /* Tamaño del icono */
+        color: #007bff; /* Color azul para el icono */
+        margin-right: 1rem; /* Espacio entre el icono y el texto */
+    }
+
+.alert-info {
+    background-color: #e9f5f9;
+    border-color: #b6e0f7;
+}
+
+    .alert-info strong {
+        color: #0056b3; /* Color del texto fuerte */
+    }
+
+/*------CARRITOOOOOOO------------*/
+/* Estilo para el contenedor del carrito */
+.container-cart-products {
+    position: absolute;
+    top: 0; /* Asegúrate de que esté alineado correctamente */
+    right: 0;
+    width: 500px;
+    max-height: 100%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    z-index: 1000;
+    display: none; /* Ocultar por defecto, mostrar al hacer clic en el icono del carrito */
+}
+
+    .container-cart-products.show {
+        display: block;
+    }
+
+/* Estilo para el encabezado del carrito */
+.cart-header {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    background: linear-gradient(to bottom, #e2b091, #efcdb7);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .cart-header h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #333;
+    }
+
+.btn-close-cart {
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+    .btn-close-cart:hover {
+        color: #ff0000;
+    }
+/* Estilo para los productos en el carrito */
+.row-product {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-product {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Alinea los elementos al inicio */
+    padding: 10px 0;
+}
+
+.info-cart-product {
+    display: flex;
+    flex-direction: column;
+}
+
+.titulo-producto-carrito {
+    font-size: 16px; /* Tamaño de letra más grande para el título del producto */
+    margin: 2px 0;
+}
+
+.color-producto-carrito,
+.talla-producto-carrito {
+    font-size: 14px; /* Tamaño de letra para color y talla */
+    margin: 2px 0;
+}
+
+.precio-producto-carrito {
+    font-size: 16px; /* Tamaño de letra más grande para el precio */
+    font-weight: bold;
+    color: #333;
+    margin-top: 5px; /* Añade un margen superior para separación */
+}
+
+/* Tamaño de letra en el total del carrito */
+.cart-total h3 {
+    font-size: 18px; /* Tamaño de letra más grande para el título Total */
+}
+
+.cantidad-producto-carrito {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.quantity-decrease,
+.quantity-increase {
+    background-color: #ddd;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.quantity-value {
+    margin: 0 10px;
+    font-size: 16px;
+}
+
+.icon-close {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    color: #f00;
+    margin-left: 10px;
+}
+
+/* Estilo para el total del carrito */
+.cart-total {
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+    .cart-total h3 {
+        margin: 0;
+        font-size: 16px;
+    }
+
+.total-pagar {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+/* Estilo para el mensaje de carrito vacío */
+.cart-empty {
+    padding: 10px;
+    text-align: center;
+    color: #666;
+}
+
+.container-cart-products {
+    display: none; /* Ocultar por defecto */
+}
+
+    .container-cart-products.show {
+        display: block; /* Mostrar cuando se aplica la clase show */
+    }
+
+/* Estilos para la imagen de vista previa del comprobante */
+#vistaPreviaImagen {
+    position: fixed; /* Fija la imagen sobre la pantalla */
+    top: 50%; /* Centra verticalmente */
+    left: 50%; /* Centra horizontalmente */
+    transform: translate(-50%, -50%); /* Centrado perfecto */
+    z-index: 1055; /* Mayor que el modal para asegurarse de que flota por encima */
+    border: 2px solid #000; /* Borde para visibilidad */
+    background-color: #fff; /* Fondo blanco para claridad */
+    max-width: 90%; /* Hace que la imagen sea responsiva */
+    max-height: 90%; /* Evita que se salga de la pantalla */
+    display: none; /* Oculto por defecto */
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5); /* Sombra para resaltar */
+    cursor: pointer; /* Indica que se puede cerrar al hacer clic */
+}
+
+
+
+

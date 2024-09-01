@@ -7,7 +7,6 @@
     <h1>Crear Insumo</h1>
     <hr />
     <div class="container">
-
         <form asp-action="Create" id="createForm">
             <div class="row">
                 <div class="col-md-6">
@@ -18,10 +17,21 @@
                         <span asp-validation-for="IdCategoria" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="CategoriaInsumo" class="control-label">Insumo</label>
+                        <select id="CategoriaInsumo" asp-for="CategoriaInsumo" class="form-control">
+                            <option value="" disabled selected>Selecciona</option>
+                            <option value="Insumo Gasto">Insumo Gasto</option>
+                            <option value="Insumo Controlados">Insumo Controlado</option>
+                        </select>
+                        <span asp-validation-for="CategoriaInsumo" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="NombreInsumo" class="control-label">Nombre del Insumo</label>
                         <input asp-for="NombreInsumo" class="form-control" />
                         <span asp-validation-for="NombreInsumo" class="text-danger"></span>
                     </div>
+                    </div>
+                    <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="UnidadMedida" class="control-label">Unidad de Medida</label>
                         <select id="unidadMedida" asp-for="UnidadMedida" class="form-control">
@@ -72,7 +82,6 @@
 
 <script>
     $(document).ready(function () {
-        // Mostrar u ocultar campos según la unidad de medida seleccionada
         $("#unidadMedida").on("change", function () {
             var selectedValue = $(this).val();
             if (selectedValue === "Yardas") {
@@ -82,39 +91,32 @@
             }
         });
 
-        // Inicialmente, ocultar el grupo de cantidad
         $("#cantidadGroup").hide();
 
-        // Manejo del envío del formulario
         $("#createForm").submit(function (event) {
             event.preventDefault();
 
-            // Validar campos vacíos
             var isValid = true;
             var errorMessage = "";
 
-            // Validar categoría
             if (!$("select[name='IdCategoria']").val()) {
                 isValid = false;
                 errorMessage += "La categoría es obligatoria.<br/>";
             }
 
-            // Validar nombre del insumo
             if (!$("input[name='NombreInsumo']").val()) {
                 isValid = false;
                 errorMessage += "El nombre del insumo es obligatorio.<br/>";
             }
 
-            // Validar unidad de medida
+            if (!$("select[name='CategoriaInsumo']").val()) {
+                isValid = false;
+                errorMessage += "La categoría del insumo es obligatoria.<br/>";
+            }
+
             if (!$("select[name='UnidadMedida']").val()) {
                 isValid = false;
                 errorMessage += "La unidad de medida es obligatoria.<br/>";
-            }
-
-            // Validar descripción
-            if (!$("input[name='Descripcion']").val()) {
-                isValid = false;
-                errorMessage += "La descripción es obligatoria.<br/>";
             }
 
             if (!isValid) {
@@ -131,25 +133,38 @@
                 url: '@Url.Action("Create", "Insumos")',
                 type: 'POST',
                 data: formData,
-                success: function (result) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: 'El insumo se ha creado correctamente.'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = '@Url.Action("Index", "Insumos")';
-                        }
-                    });
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'El insumo se ha creado correctamente.'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '@Url.Action("Index", "Insumos")';
+                            }
+                        });
+                    } else {
+                        // Handle server-side validation errors
+                        var errorMessage = response.errors ? response.errors.join("<br/>") : "Unknown error occurred.";
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Errores de Validación',
+                            html: errorMessage
+                        });
+                    }
                 },
                 error: function (xhr, status, error) {
+                    // Improved error handling
+                    console.error("Error occurred: ", error);
                     Swal.fire({
                         icon: 'error',
-                        title: '¡Error!',
-                        text: 'Hubo un problema al crear el insumo.'
+                        title: 'Error del Servidor',
+                        text: 'Hubo un problema al crear el insumo. Por favor, inténtelo de nuevo más tarde.'
                     });
                 }
             });
         });
     });
+
 </script>

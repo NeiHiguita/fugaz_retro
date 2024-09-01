@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Compras")]
     public class ProveedorsController : Controller
     {
         private readonly FugazContext _context;
@@ -42,8 +43,16 @@ namespace fugaz_retro.Controllers
                 return NotFound();
             }
 
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                // Devuelve los detalles en formato JSON si la solicitud es AJAX
+                return Json(proveedor);
+            }
+
             return View(proveedor);
         }
+
+
 
         // GET: Proveedors/Create
         public IActionResult Create()
@@ -54,36 +63,53 @@ namespace fugaz_retro.Controllers
         // POST: Proveedors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdProveedor,TipoProveedor,Empresa,RepresentanteLegal,Rut,NombreCompleto,Documento,Telefono,Direccion,Estado")] Proveedor proveedor)
+        public async Task<IActionResult> Create([Bind("IdProveedor,TipoProveedor,Empresa,RepresentanteLegal,Rut,NombreCompleto,Documento,Telefono,DireccionAlternativa")] Proveedor proveedor)
         {
             if (ModelState.IsValid)
             {
+                // Validar duplicados basados en el tipo de proveedor
                 if (proveedor.TipoProveedor == "Natural")
                 {
-                    var documentoExistente = await _context.Proveedors.AnyAsync(p => p.Documento == proveedor.Documento);
-                    if (documentoExistente)
+                    // Usamos AnyAsync para verificar duplicados de Documento
+                    if (await _context.Proveedors.AnyAsync(p => p.TipoProveedor == "Natural" && p.Documento == proveedor.Documento))
                     {
+                        // Si es duplicado, agregamos un mensaje de error al estado del modelo
                         ModelState.AddModelError("Documento", "El documento del proveedor ya está registrado.");
-                        return View(proveedor);
+                        return Json(new { success = false, errorMessage = "El documento del proveedor ya está registrado." });
                     }
                 }
-                else if (proveedor.TipoProveedor == "Juridico")
+                else if (proveedor.TipoProveedor == "Jurídico")
                 {
-                    var rutExistente = await _context.Proveedors.AnyAsync(p => p.Rut == proveedor.Rut);
-                    if (rutExistente)
+                    // Usamos AnyAsync para verificar duplicados de Rut
+                    if (await _context.Proveedors.AnyAsync(p => p.TipoProveedor == "Jurídico" && p.Rut == proveedor.Rut))
                     {
+                        // Si es duplicado, agregamos un mensaje de error al estado del modelo
                         ModelState.AddModelError("Rut", "El Rut del proveedor ya está registrado.");
-                        return View(proveedor);
+                        return Json(new { success = false, errorMessage = "El Rut del proveedor ya está registrado." });
                     }
                 }
 
-                _context.Proveedors.Add(proveedor);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Proveedor creado exitosamente.";
-                return RedirectToAction(nameof(Index));
+                // Establecer el estado por defecto como activo
+                proveedor.Estado = true;
+
+                try
+                {
+                    // Agregar y guardar el nuevo proveedor en el contexto
+                    _context.Proveedors.Add(proveedor);
+                    await _context.SaveChangesAsync();
+
+                    // Devolver una respuesta JSON indicando éxito y la redirección deseada
+                    return Json(new { success = true, redirectUrl = Url.Action("Index") });
+                }
+                catch (Exception ex)
+                {
+                    // Manejar excepciones y devolver un mensaje de error
+                    return Json(new { success = false, errorMessage = "Error al crear el proveedor: " + ex.Message });
+                }
             }
 
-            return View(proveedor);
+            // Devolver una respuesta JSON indicando error si el estado del modelo no es válido
+            return Json(new { success = false, errorMessage = "Error al crear el proveedor. Verifique los datos e intente nuevamente." });
         }
 
         // POST: Proveedors/ToggleEstado/5
@@ -96,10 +122,12 @@ namespace fugaz_retro.Controllers
                 return NotFound();
             }
 
+            // Cambiar el estado del proveedor y guardar los cambios
             proveedor.Estado = !proveedor.Estado;
             _context.Update(proveedor);
             await _context.SaveChangesAsync();
 
+            // Devolver una respuesta de éxito
             return Ok();
         }
 
@@ -122,35 +150,65 @@ namespace fugaz_retro.Controllers
         // POST: Proveedors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdProveedor,TipoProveedor,Empresa,RepresentanteLegal,Rut,NombreCompleto,Documento,Telefono,Direccion,Estado")] Proveedor proveedor)
+        public async Task<IActionResult> Edit(int id, [Bind("IdProveedor,TipoProveedor,Empresa,RepresentanteLegal,Rut,NombreCompleto,Documento,Telefono,DireccionAlternativa")] Proveedor proveedor)
         {
             if (id != proveedor.IdProveedor)
             {
-                return NotFound();
+                return Json(new { success = false, errorMessage = "Proveedor no encontrado." });
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(proveedor);
+                    // Obtener el proveedor existente de la base de datos
+                    var proveedorExistente = await _context.Proveedors.FindAsync(id);
+
+                    if (proveedorExistente == null)
+                    {
+                        return Json(new { success = false, errorMessage = "Proveedor no encontrado." });
+                    }
+
+                    // Actualizar solo los campos modificables
+                    proveedorExistente.TipoProveedor = proveedor.TipoProveedor;
+                    proveedorExistente.Empresa = proveedor.Empresa;
+                    proveedorExistente.RepresentanteLegal = proveedor.RepresentanteLegal;
+                    proveedorExistente.Rut = proveedor.Rut;
+                    proveedorExistente.NombreCompleto = proveedor.NombreCompleto;
+                    proveedorExistente.Documento = proveedor.Documento;
+                    proveedorExistente.Telefono = proveedor.Telefono;
+                    proveedorExistente.DireccionAlternativa = proveedor.DireccionAlternativa;
+                    // No modificar el estado
+                    proveedorExistente.Estado = proveedorExistente.Estado; // Conservar el estado original
+
+                    _context.Update(proveedorExistente);
                     await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Proveedor editado exitosamente.";
+
+                    return Json(new { success = true });
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!ProveedorExists(proveedor.IdProveedor))
                     {
-                        return NotFound();
+                        return Json(new { success = false, errorMessage = "Proveedor no encontrado." });
                     }
                     else
                     {
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, errorMessage = ex.Message });
+                }
             }
-            return View(proveedor);
+
+            // Devolver errores de validación
+            var validationErrors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { Field = x.Key, Errors = x.Value.Errors.Select(e => e.ErrorMessage) });
+
+            return Json(new { success = false, validationErrors });
         }
 
         // GET: Proveedors/Delete/5
@@ -240,6 +298,33 @@ namespace fugaz_retro.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        // Acción para obtener los detalles del proveedor
+        public IActionResult GetProveedorDetails(int id)
+        {
+            var proveedor = _context.Proveedors
+                .Where(p => p.IdProveedor == id)
+                .Select(p => new
+                {
+                    p.TipoProveedor,
+                    p.Empresa,
+                    p.RepresentanteLegal,
+                    p.Rut,
+                    p.NombreCompleto,
+                    p.Documento,
+                    p.Telefono,
+                    p.DireccionAlternativa,
+                    p.Estado
+                })
+                .FirstOrDefault();
+
+            if (proveedor == null)
+            {
+                return NotFound("Proveedor no encontrado");
+            }
+
+            return Json(proveedor);
         }
 
         private bool ProveedorExists(int id)

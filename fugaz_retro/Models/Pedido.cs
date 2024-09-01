@@ -14,13 +14,11 @@ namespace fugaz_retro.Models
         public DateTime FechaEntrega { get; set; }
         public double CostoPedido { get; set; }
         public double CostoEnvio { get; set; }
-        public double Iva { get; set; }
         public double Descuento { get; set; }
         public double TotalPedido { get; set; }
         public byte[]? ComprobantePago { get; set; }
         public string? Direccion { get; set; }
         public string? Ciudad { get; set; }
-
         public virtual ICollection<DetallePedido> DetallePedidos { get; } = new List<DetallePedido>();
         public virtual Cliente? IdClienteNavigation { get; set; }
         public virtual ICollection<Venta> Venta { get; } = new List<Venta>();

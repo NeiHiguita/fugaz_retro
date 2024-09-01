@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using fugaz_retro.Models;
+﻿using fugaz_retro.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace fugaz_retro.Controllers
 {
     [Authorize]
+    [PermisosFilter("Modulo Compras")]
     public class CategoriaInsumosController : Controller
     {
         private readonly FugazContext _context;
@@ -23,33 +19,42 @@ namespace fugaz_retro.Controllers
         // GET: CategoriaInsumos
         public async Task<IActionResult> Index()
         {
-            return _context.CategoriaInsumos != null ?
-                        View(await _context.CategoriaInsumos.ToListAsync()) :
-                        Problem("Entity set 'FugazContext.CategoriaInsumos'  is null.");
+            var categorias = await _context.CategoriaInsumos.ToListAsync();
+            var viewModel = new CategoriaInsumoViewModel
+            {
+                Categorias = categorias
+            };
+            return View(viewModel);
         }
 
         // GET: CategoriaInsumos/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null || _context.CategoriaInsumos == null)
+            var categoria = await _context.CategoriaInsumos
+                .Where(c => c.IdCategoria == id)
+                .Select(c => new {
+                    NombreCategoria = c.NombreCategoria,
+                    EstadoCategoria = c.EstadoCategoria
+                })
+                .FirstOrDefaultAsync();
+
+            if (categoria == null)
             {
                 return NotFound();
             }
 
-            var categoriaInsumo = await _context.CategoriaInsumos
-                .FirstOrDefaultAsync(m => m.IdCategoria == id);
-            if (categoriaInsumo == null)
-            {
-                return NotFound();
-            }
-
-            return View(categoriaInsumo);
+            return Json(categoria);
         }
+
 
         // GET: CategoriaInsumos/Create
         public IActionResult Create()
         {
-            return View();
+            var categoriaInsumo = new CategoriaInsumo
+            {
+                EstadoCategoria = true // Estado activo por defecto
+            };
+            return View(categoriaInsumo);
         }
 
         // POST: CategoriaInsumos/Create
@@ -59,12 +64,39 @@ namespace fugaz_retro.Controllers
         {
             if (ModelState.IsValid)
             {
+
+                // Establece EstadoCategoria a true antes de guardar
+                categoriaInsumo.EstadoCategoria = true;
+
                 _context.Add(categoriaInsumo);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(categoriaInsumo);
         }
+
+
+        [HttpPost]
+        public JsonResult CheckCategoriaExists(string nombreCategoria)
+        {
+            var exists = _context.CategoriaInsumos.Any(c => c.NombreCategoria == nombreCategoria);
+            return Json(exists);
+        }
+
+        // POST: CategoriaInsumos/Create desde el modal
+        [HttpPost]
+        public async Task<IActionResult> CreateModal([FromBody] CategoriaInsumoViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                viewModel.NuevaCategoria.EstadoCategoria = true;
+                _context.CategoriaInsumos.Add(viewModel.NuevaCategoria);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false, error = "Error al crear la categoría." });
+        }
+
         // POST: CategoriaInsumos/ToggleEstado/5
         [HttpPost]
         public async Task<IActionResult> ToggleEstado(int id)
@@ -100,36 +132,62 @@ namespace fugaz_retro.Controllers
 
         // POST: CategoriaInsumos/Edit/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdCategoria,NombreCategoria,EstadoCategoria")] CategoriaInsumo categoriaInsumo)
+        public async Task<IActionResult> Edit([FromBody] CategoriaInsumoViewModel model)
         {
-            if (id != categoriaInsumo.IdCategoria)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { error = "Modelo inválido" });
+            }
+
+            var categoria = model.NuevaCategoria;
+
+            // Verificar si la categoría existe
+            var existingCategoria = await _context.CategoriaInsumos
+                .FirstOrDefaultAsync(c => c.IdCategoria == categoria.IdCategoria);
+
+            if (existingCategoria == null)
+            {
+                return NotFound(new { error = "Categoría no encontrada." });
+            }
+
+            try
+            {
+                // Actualizar los campos
+                existingCategoria.NombreCategoria = categoria.NombreCategoria;
+                //existingCategoria.EstadoCategoria = categoria.EstadoCategoria;
+
+                _context.CategoriaInsumos.Update(existingCategoria);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                // Registrar la excepción y devolver un error genérico
+                // _logger.LogError(ex, "Error al actualizar la categoría"); // Si usas un logger
+                return StatusCode(500, "Error interno del servidor.");
+            }
+        }
+
+        public IActionResult GetCategoria(int id)
+        {
+            var categoria = _context.CategoriaInsumos
+                                    .Where(c => c.IdCategoria == id)
+                                    .Select(c => new
+                                    {
+                                        c.IdCategoria,
+                                        c.NombreCategoria
+                                    })
+                                    .FirstOrDefault();
+
+            if (categoria == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(categoriaInsumo);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CategoriaInsumoExists(categoriaInsumo.IdCategoria))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(categoriaInsumo);
+            return Json(categoria);
         }
+
 
         // GET: CategoriaInsumos/Delete/5
         public async Task<IActionResult> Delete(int? id)

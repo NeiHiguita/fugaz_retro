@@ -39,6 +39,9 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
         [TempData]
         public string ErrorMessage { get; set; }
 
+        [TempData]
+        public bool InactiveUser { get; set; }  // TempData for inactive user
+
         public class InputModel
         {
             [Required(ErrorMessage = "El campo Correo es obligatorio.")]
@@ -77,40 +80,57 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
+                var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                if (user != null)
                 {
-                    _logger.LogInformation("User logged in.");
-
-                    // Buscar el usuario por correo electrónico
-                    var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
-
-                    // Buscar el usuario por IdRol en la tabla Usuario
-                    var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == Input.Email);
-
-                    if (usuario != null)
+                    if (!user.EmailConfirmed)
                     {
-                        var IdRol = usuario.IdRol;
-
-                        HttpContext.Session.SetInt32("IdRol", (int)IdRol);
-
-                        if (IdRol == 7)
-                        {
-                            // Redirigir al index en la carpeta "Home"
-                            return Redirect("/Home/Index");
-                        }
-
-                        return LocalRedirect(returnUrl);
+                        InactiveUser = true;
+                        return RedirectToPage();
                     }
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
+
+                    var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("User logged in.");
+
+                        var usuario = await _context.Usuarios.Include(u => u.IdRolNavigation)
+                                      .ThenInclude(r => r.RolPermisos)
+                                      .ThenInclude(rp => rp.IdPermisoNavigation)
+                                      .FirstOrDefaultAsync(u => u.Correo == Input.Email);
+
+                        if (usuario != null)
+                        {
+                            var IdRol = usuario.IdRol;
+                            var doc = usuario.Document;
+                            HttpContext.Session.SetInt32("IdRol", (int)IdRol);
+
+                            // Obtener los permisos del usuario y almacenarlos en la sesión
+                            var permisos = usuario.IdRolNavigation.RolPermisos.Select(rp => rp.IdPermisoNavigation.NombrePermiso).ToList();
+                            HttpContext.Session.SetString("Permisos", string.Join(",", permisos));
+
+                            if (IdRol == 7 )
+                            {
+                                return Redirect("/Home/index");
+                            }
+                            
+                            return LocalRedirect(returnUrl);
+                        }
+                    }
+                    if (result.RequiresTwoFactor)
+                    {
+                        return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
+                    }
+                    if (result.IsLockedOut)
+                    {
+                        _logger.LogWarning("User account locked out.");
+                        return RedirectToPage("./Lockout");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Usuario o contraseña está incorrecto.");
+                        return Page();
+                    }
                 }
                 else
                 {
@@ -120,6 +140,5 @@ namespace fugaz_retro.Areas.Identity.Pages.Account
             }
             return Page();
         }
-
     }
 }

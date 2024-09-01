@@ -18,7 +18,13 @@
             <thead class="thead-light">
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.NombreRol)
+                        Rol
+                    </th>
+                    <th>
+                        Permisos
+                    </th>
+                    <th>
+                        estado
                     </th>
                     <th>Acciones</th>
                 </tr>
@@ -27,24 +33,45 @@
                 @foreach (var item in Model)
                 {
                     <tr>
+                        <td>@Html.DisplayFor(modelItem => item.NombreRol)</td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.NombreRol)
+                            @if (item.RolPermisos.Count > 4)
+                            {
+                                @string.Join(", ", item.RolPermisos.Take(4).Select(rp => rp.IdPermisoNavigation.NombrePermiso))
+                                <span>...</span>
+                            }
+                            else
+                            {
+                                @string.Join(", ", item.RolPermisos.Select(rp => rp.IdPermisoNavigation.NombrePermiso))
+                            }
                         </td>
-
                         <td class="cntr">
-                            @if (item.IdRol != 1)
+                            @if (item.IdRol != 1 && item.IdRol != 7)
+                            {
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="toggleSwitch_@item.IdRol" onchange="toggleEstado(@item.IdRol)" @(item.Estado ? "checked" : "")>
+                                    <label class="form-check-label" for="toggleSwitch_@item.IdRol"></label>
+                                </div>
+                            }
+                            else
+                            {
+                                <p>No Modificable</p>
+                            }
+                        </td>
+                        <td class="cntr">
+                            @if (item.IdRol != 1 && item.IdRol != 7)
                             {
                                 <a asp-action="Edit" asp-route-id="@item.IdRol"><i class="fas fa-pencil-alt mx-1" style="color: green; font-size: 22px"></i></a>
                                 <a href="javascript:void(0);" onclick="showDeleteModal('@item.IdRol', '@item.NombreRol')"><i class="fas fa-trash-alt mx-1" style="color: #bf0808; font-size: 22px"></i></a>
                             }
                             else
                             {
-                                <a><i class="fas fa-pencil-alt mx-1" style="color: rgba(0, 128, 0, 0.77); font-size: 20px"></i></a>
-                                <a><i class="fas fa-trash-alt mx-1" style="color: #bf0808ab; font-size: 20px"></i></a>
+                                <p>No Modificable</p>
                             }
                         </td>
                     </tr>
                 }
+
             </tbody>
         </table>
     </div>
@@ -79,6 +106,26 @@
 
 @section Scripts {
     <script>
+        function toggleEstado(idRol) {
+            var checkbox = document.getElementById('toggleSwitch_' + idRol);
+            var estado = checkbox.checked;
+
+            console.log("ID del Rol:", idRol);
+            console.log("Estado:", estado);
+
+            $.ajax({
+                url: '@Url.Action("ToggleRoleStatus", "Roles")',
+                type: 'POST',
+                data: { idRol: idRol, estado: estado },
+                success: function (result) {
+                    console.log("El estado se cambió exitosamente.");
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al cambiar el estado del rol:', error);
+                }
+            });
+        }
+
         function showDeleteModal(id, name) {
             $('#roleName').text(name);
             $('#btnConfirmDelete').attr('data-id', id);
@@ -97,7 +144,11 @@
                         location.reload();
                     },
                     error: function (xhr, status, error) {
-                        $('#deleteError').text("No se puede eliminar el rol porque está asociado a un usuario.").removeClass('d-none');
+                        if (xhr.status === 409) {
+                            $('#deleteError').text("No se puede eliminar el rol porque está asociado a un usuario.").removeClass('d-none');
+                        } else {
+                            $('#deleteError').text("Ocurrió un error al intentar eliminar el rol.").removeClass('d-none');
+                        }
                     }
                 });
             });

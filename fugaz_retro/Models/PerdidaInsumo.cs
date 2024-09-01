@@ -7,9 +7,13 @@ public partial class PerdidaInsumo
 {
     public int IdPerdidaInsumo { get; set; }
 
+    public string? TipoInsumo { get; set; }
+
     public int? IdInsumo { get; set; }
 
-    public int Cantidad { get; set; }
+    public double Cantidad { get; set; }
+
+    public string? UnidadMedida { get; set; } = null!;
 
     public DateTime Fecha { get; set; }
 
