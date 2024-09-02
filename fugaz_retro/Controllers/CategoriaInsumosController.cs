@@ -10,12 +10,10 @@ namespace fugaz_retro.Controllers
     public class CategoriaInsumosController : Controller
     {
         private readonly FugazContext _context;
-
         public CategoriaInsumosController(FugazContext context)
         {
             _context = context;
         }
-
         // GET: CategoriaInsumos
         public async Task<IActionResult> Index()
         {
