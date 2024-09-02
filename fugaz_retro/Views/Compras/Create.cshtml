@@ -42,76 +42,76 @@
                     </div>
                 </div>
 
-            <div class="border border-secondary border-3 rounded p-4 bg-light shadow-sm mt-4">
-                <h3 class="mb-4">Detalles de la Compra</h3>
+                <div class="border border-secondary border-3 rounded p-4 bg-light shadow-sm mt-4">
+                    <h3 class="mb-4">Detalles de la Compra</h3>
 
-                <!-- Fila para ingresar los detalles -->
-                <div class="row mb-3">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="insumo">Insumo</label>
-                            <select id="insumo" class="form-control">
-                                <option value="">Selecciona insumo</option>
-                                @foreach (var insumo in ViewBag.Insumos)
-                                {
-                                    <option value="@insumo.IdInsumo">@insumo.NombreInsumo</option>
-                                }
-                            </select>
+                    <!-- Fila para ingresar los detalles -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="insumo">Insumo</label>
+                                <select id="insumo" class="form-control">
+                                    <option value="">Selecciona insumo</option>
+                                    @foreach (var insumo in ViewBag.Insumos)
+                                    {
+                                        <option value="@insumo.IdInsumo">@insumo.NombreInsumo</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="cantidad">Cantidad</label>
+                                <input type="text" id="cantidad" class="form-control" placeholder="Cantidad" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="unidadMedida">Unidad de Medida</label>
+                                <select id="unidadMedida" class="form-control">
+                                    <option value="">Selecciona unidad de medida</option>
+                                    <option value="Metros">Metros</option>
+                                    <option value="Centímetros">Centímetros</option>
+                                    <option value="Yardas-2000">Yardas - 2000</option>
+                                    <option value="Yardas-5000">Yardas - 5000</option>
+                                    <option value="Docena">Docena</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="precioUnitario">Precio Unitario</label>
+                                <input type="number" id="precioUnitario" class="form-control" step="0.01" placeholder="Precio Unitario" />
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary w-60" onclick="agregarDetalle()">Agregar Detalle</button>
                         </div>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="cantidad">Cantidad</label>
-                            <input type="text" id="cantidad" class="form-control" placeholder="Cantidad" />
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="unidadMedida">Unidad de Medida</label>
-                            <select id="unidadMedida" class="form-control">
-                                <option value="">Selecciona unidad de medida</option>
-                                <option value="Metros">Metros</option>
-                                <option value="Centímetros">Centímetros</option>
-                                <option value="Yardas-2000">Yardas - 2000</option>
-                                <option value="Yardas-5000">Yardas - 5000</option>
-                                <option value="Docena">Docena</option>
-                            </select>
-                        </div>
-                    </div>
-                      
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="precioUnitario">Precio Unitario</label>
-                            <input type="number" id="precioUnitario" class="form-control" step="0.01" placeholder="Precio Unitario" />
-                        </div>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-primary w-60" onclick="agregarDetalle()">Agregar Detalle</button>
+
+                    <!-- Tabla donde se agregarán los detalles -->
+                    <div class="table-responsive">
+                        <table id="detallesTable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Insumo</th>
+                                    <th>Cantidad</th>
+                                    <th>Unidad de Medida</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Aquí se agregarán dinámicamente los detalles -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Tabla donde se agregarán los detalles -->
-                <div class="table-responsive">
-                    <table id="detallesTable" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Insumo</th>
-                                <th>Cantidad</th>
-                                <th>Unidad de Medida</th>
-                                <th>Precio Unitario</th>
-                                <th>Subtotal</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Aquí se agregarán dinámicamente los detalles -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Columna 1: Fecha de Compra -->
+                <div class="row">
+                    <!-- Columna 1: Fecha de Compra -->
                     <div class="col-md-4">
                         <div class="form-group">
                             <label asp-for="Subtotal" class="control-label">Subtotal</label>
@@ -137,22 +137,22 @@
                             <span asp-validation-for="PrecioTotal" class="text-danger"></span>
                         </div>
                     </div>
-               
-            </div>
-            <div class="form-group mt-4">
-                <button type="submit" class="btn btn-success">Crear</button>
-                <a asp-action="Index" class="btn btn-secondary">Regresar</a>
-            </div>
-            
+
+                </div>
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-success">Crear</button>
+                    <a asp-action="Index" class="btn btn-secondary">Regresar</a>
+                </div>
+
         </form>
     </div>
 </div>
 <style>
     .extra-options {
-    position: absolute;
-    margin-top: 5px;
-    margin-left: 15px;
-}
+        position: absolute;
+        margin-top: 5px;
+        margin-left: 15px;
+    }
 </style>
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -174,31 +174,31 @@
                 subtotal = subtotal; // Formatear a dos decimales
 
                 var nuevaFila = `
-                            <tr>
-                                <td>
-                                    <input type="hidden" name="DetalleCompras[${detalleIndex}].IdInsumo" value="${insumo}" />
-                                    ${insumoText}
-                                </td>
-                                <td>
-                                    <input type="hidden" name="DetalleCompras[${detalleIndex}].Cantidad" value="${cantidad}" />
-                                    ${cantidad} <!-- Mostrar la cantidad como la ingresó el usuario -->
-                                </td>
-                                <td>
-                                    <input type="hidden" name="DetalleCompras[${detalleIndex}].UnidadMedida" value="${unidadMedida}" />
-                                    ${unidadMedida}
-                                </td>
-                                <td>
-                                    <input type="hidden" name="DetalleCompras[${detalleIndex}].PrecioUnitario" value="${precioUnitario}" />
-                                    ${precioUnitario}
-                                </td>
-                                <td>
-                                    ${subtotal} <!-- Mostrar el subtotal calculado -->
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">Eliminar</button>
-                                </td>
-                            </tr>
-                        `;
+                                    <tr>
+                                        <td>
+                                            <input type="hidden" name="DetalleCompras[${detalleIndex}].IdInsumo" value="${insumo}" />
+                                            ${insumoText}
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="DetalleCompras[${detalleIndex}].Cantidad" value="${cantidad}" />
+                                            ${cantidad} <!-- Mostrar la cantidad como la ingresó el usuario -->
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="DetalleCompras[${detalleIndex}].UnidadMedida" value="${unidadMedida}" />
+                                            ${unidadMedida}
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="DetalleCompras[${detalleIndex}].PrecioUnitario" value="${precioUnitario}" />
+                                            ${precioUnitario}
+                                        </td>
+                                        <td>
+                                            ${subtotal} <!-- Mostrar el subtotal calculado -->
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                `;
 
                 $('#detallesTable tbody').append(nuevaFila);
 
@@ -295,7 +295,7 @@
             $('#fechaCompra').attr('max', fechaHoy);
             $('#fechaCompra').attr('min', fechaLimite);
             $('#fechaCompra').val(fechaHoy);
-           
+
         });
 
         $('#TipoProveedor').change(function () {
@@ -369,6 +369,9 @@
             });
         });
     </script>
+    <script>
+        document.getElementById('cantidad').addEventListener('input', function (event) {
+            this.value = this.value.replace(/[^0-9,]/g, '');
+        });
+    </script>
 }
-
-

@@ -7,9 +7,12 @@ using Microsoft.EntityFrameworkCore;
 using fugaz_retro.Models;
 using System.Text.Json;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fugaz_retro.Controllers
 {
+    [Authorize]
+    [PermisosFilter("Modulo Compras")]
     public class ComprasController : Controller
     {
         private readonly FugazContext _context;
@@ -93,7 +96,6 @@ namespace fugaz_retro.Controllers
             {
                 try
                 {
-                    // Agregar la compra
                     _context.Compras.Add(compra);
                     await _context.SaveChangesAsync();
 
@@ -103,14 +105,14 @@ namespace fugaz_retro.Controllers
                         if (double.TryParse(detalle.Cantidad.ToString(), out double cantidad))
                         {
                             detalle.Cantidad = cantidad;
-                            var insumo = await _context.Insumos.FindAsync(detalle.IdInsumo);
-                            if (insumo != null)
+                            var originalInsumo = await _context.Insumos.FindAsync(detalle.IdInsumo);
+                            if (originalInsumo != null)
                             {
-                                insumo.Stock += detalle.Cantidad;
-                                insumo.PrecioUnitario = detalle.PrecioUnitario;
-                                insumo.Estado = insumo.Stock > 3 ? "Disponible" : "Agotado";
+                                originalInsumo.Stock += detalle.Cantidad;
+                                originalInsumo.PrecioUnitario = detalle.PrecioUnitario;
 
-                                _context.Insumos.Update(insumo);
+                                _context.Update(originalInsumo);
+                                await _context.SaveChangesAsync();
                             }
                         }
                         else
@@ -126,7 +128,7 @@ namespace fugaz_retro.Controllers
                     }
                     await _context.SaveChangesAsync(); //Detalles 
                     return RedirectToAction(nameof(Index));
-                
+
 
                 }
                 catch (Exception ex)
@@ -139,11 +141,6 @@ namespace fugaz_retro.Controllers
             ViewBag.Insumos = _context.Insumos.ToList();
             return View(compra);
         }
-
-
-
-
-
         private bool CompraExists(int id)
         {
             return (_context.Compras?.Any(e => e.IdCompra == id)).GetValueOrDefault();
