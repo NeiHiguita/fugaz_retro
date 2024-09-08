@@ -45,6 +45,8 @@ namespace fugaz_retro.Controllers
         {
             var userEmail = User.Identity.Name;
             List<Producto> nuevasTendencias, masVendidos, restoProductos;
+            // Cargar las ciudades
+            var ciudades = _context.CostoEnvios.ToList();
 
             if (string.IsNullOrEmpty(userEmail))
             {
@@ -61,7 +63,8 @@ namespace fugaz_retro.Controllers
                     Productos = productos,
                     NuevasTendencias = nuevasTendencias,
                     MasVendidos = masVendidos,
-                    RestoProductos = restoProductos
+                    RestoProductos = restoProductos,
+                                Ciudades = ciudades // Pasar las ciudades
                 };
 
                 var detalleProductos = _context.DetalleProductos
@@ -103,7 +106,8 @@ namespace fugaz_retro.Controllers
                 Productos = productosConUsuario,
                 NuevasTendencias = nuevasTendencias,
                 MasVendidos = masVendidos,
-                RestoProductos = restoProductos
+                RestoProductos = restoProductos,
+                Ciudades = ciudades // Pasar las ciudades
             };
 
             var detalleProductosWithUser = _context.DetalleProductos
@@ -205,6 +209,26 @@ namespace fugaz_retro.Controllers
 
             return View("Index", viewModel);
         }
+        [HttpGet]
+        public async Task<IActionResult> GetCostoEnvio(string ciudad)
+        {
+            if (string.IsNullOrEmpty(ciudad))
+            {
+                return Json(new { success = false, message = "Ciudad no válida." });
+            }
+
+            var costoEnvio = await _context.CostoEnvios
+                .Where(ce => ce.Ciudad == ciudad)
+                .Select(ce => ce.Costo)
+                .FirstOrDefaultAsync();
+
+            if (costoEnvio == 0)
+            {
+                return Json(new { success = false, message = "Costo de envío no encontrado." });
+            }
+
+            return Json(new { success = true, costoEnvio });
+        }
 
         [HttpPost]
         public async Task<IActionResult> CrearPedido(Pedido pedido, string detallesPedidoJson, IFormFile? comprobantePago)
@@ -226,6 +250,12 @@ namespace fugaz_retro.Controllers
                     ModelState.AddModelError("", "Cliente no encontrado.");
                     return Json(new { success = false, message = "Cliente no encontrado." });
                 }
+                var ciudades = await _context.CostoEnvios
+                    .Select(ce => new { ce.Ciudad, ce.Costo })
+                    .Distinct()
+                    .ToListAsync();
+
+                ViewBag.Ciudades = new SelectList(ciudades, "Ciudad", "Ciudad");
 
                 // Asignar el ID del cliente al pedido
                 pedido.IdCliente = cliente.IdCliente;

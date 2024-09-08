@@ -11,7 +11,11 @@ namespace fugaz_retro.Models
 
         public int IdInsumo { get; set; }
 
-        public int Cantidad { get; set; }
+        public string UnidadMedida { get; set; } = null!;
+
+        public string Color { get; set; } = null!;
+
+        public double Cantidad { get; set; }
 
         public virtual DetalleProducto? DetalleProducto { get; set; }
         public virtual Insumo? Insumo { get; set; }

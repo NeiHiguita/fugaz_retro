@@ -10,10 +10,12 @@ namespace fugaz_retro.Controllers
     public class CategoriaInsumosController : Controller
     {
         private readonly FugazContext _context;
+
         public CategoriaInsumosController(FugazContext context)
         {
             _context = context;
         }
+
         // GET: CategoriaInsumos
         public async Task<IActionResult> Index()
         {
@@ -55,24 +57,6 @@ namespace fugaz_retro.Controllers
             return View(categoriaInsumo);
         }
 
-        // POST: CategoriaInsumos/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdCategoria,NombreCategoria,EstadoCategoria")] CategoriaInsumo categoriaInsumo)
-        {
-            if (ModelState.IsValid)
-            {
-
-                // Establece EstadoCategoria a true antes de guardar
-                categoriaInsumo.EstadoCategoria = true;
-
-                _context.Add(categoriaInsumo);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(categoriaInsumo);
-        }
-
 
         [HttpPost]
         public JsonResult CheckCategoriaExists(string nombreCategoria)
@@ -83,34 +67,59 @@ namespace fugaz_retro.Controllers
 
         // POST: CategoriaInsumos/Create desde el modal
         [HttpPost]
-        public async Task<IActionResult> CreateModal([FromBody] CategoriaInsumoViewModel viewModel)
+        public IActionResult CreateModal(string nombreCategoria)
         {
-            if (ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(nombreCategoria))
             {
-                viewModel.NuevaCategoria.EstadoCategoria = true;
-                _context.CategoriaInsumos.Add(viewModel.NuevaCategoria);
-                await _context.SaveChangesAsync();
+                return Json(new { success = false, error = "El nombre de la categoría no puede estar vacío." });
+            }
+
+            // Verificar si ya existe una categoría con el mismo nombre
+            var categoriaExiste = _context.CategoriaInsumos.Any(c => c.NombreCategoria == nombreCategoria);
+            if (categoriaExiste)
+            {
+                return Json(new { success = false, error = "Ya existe una categoría con este nombre." });
+            }
+
+            // Crear la nueva categoría con estado activo
+            var nuevaCategoria = new CategoriaInsumo
+            {
+                NombreCategoria = nombreCategoria,
+                EstadoCategoria = true // Establecer el estado como activo
+            };
+
+            _context.CategoriaInsumos.Add(nuevaCategoria);
+            _context.SaveChanges();
+
+            return Json(new { success = true, categoria = new { idCategoria = nuevaCategoria.IdCategoria, nombreCategoria = nuevaCategoria.NombreCategoria, estadoCategoria = nuevaCategoria.EstadoCategoria } });
+        }
+
+
+
+        [HttpPost]
+        public IActionResult UpdateEstado(int idCategoria, bool estadoCategoria)
+        {
+            var categoria = _context.CategoriaInsumos.FirstOrDefault(c => c.IdCategoria == idCategoria);
+
+            if (categoria == null)
+            {
+                return Json(new { success = false, error = "Categoría no encontrada." });
+            }
+
+            categoria.EstadoCategoria = estadoCategoria;
+
+            try
+            {
+                _context.SaveChanges();
                 return Json(new { success = true });
             }
-            return Json(new { success = false, error = "Error al crear la categoría." });
-        }
-
-        // POST: CategoriaInsumos/ToggleEstado/5
-        [HttpPost]
-        public async Task<IActionResult> ToggleEstado(int id)
-        {
-            var categoriaInsumo = await _context.CategoriaInsumos.FindAsync(id);
-            if (categoriaInsumo == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                // Manejo de errores
+                return Json(new { success = false, error = "Hubo un problema al actualizar el estado." });
             }
-
-            categoriaInsumo.EstadoCategoria = !categoriaInsumo.EstadoCategoria;
-            _context.Update(categoriaInsumo);
-            await _context.SaveChangesAsync();
-
-            return Ok();
         }
+
 
         // GET: CategoriaInsumos/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -128,144 +137,76 @@ namespace fugaz_retro.Controllers
             return View(categoriaInsumo);
         }
 
-        // POST: CategoriaInsumos/Edit/5
-        [HttpPost]
-        public async Task<IActionResult> Edit([FromBody] CategoriaInsumoViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { error = "Modelo inválido" });
-            }
 
-            var categoria = model.NuevaCategoria;
 
-            // Verificar si la categoría existe
-            var existingCategoria = await _context.CategoriaInsumos
-                .FirstOrDefaultAsync(c => c.IdCategoria == categoria.IdCategoria);
-
-            if (existingCategoria == null)
-            {
-                return NotFound(new { error = "Categoría no encontrada." });
-            }
-
-            try
-            {
-                // Actualizar los campos
-                existingCategoria.NombreCategoria = categoria.NombreCategoria;
-                //existingCategoria.EstadoCategoria = categoria.EstadoCategoria;
-
-                _context.CategoriaInsumos.Update(existingCategoria);
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                // Registrar la excepción y devolver un error genérico
-                // _logger.LogError(ex, "Error al actualizar la categoría"); // Si usas un logger
-                return StatusCode(500, "Error interno del servidor.");
-            }
-        }
-
-        public IActionResult GetCategoria(int id)
+        [HttpGet]
+        public IActionResult GetCategoria(int idCategoria)
         {
             var categoria = _context.CategoriaInsumos
-                                    .Where(c => c.IdCategoria == id)
-                                    .Select(c => new
-                                    {
-                                        c.IdCategoria,
-                                        c.NombreCategoria
-                                    })
-                                    .FirstOrDefault();
+                .Where(c => c.IdCategoria == idCategoria)
+                .Select(c => new {
+                    idCategoria = c.IdCategoria,
+                    nombreCategoria = c.NombreCategoria,
+                    estadoCategoria = c.EstadoCategoria
+                })
+                .FirstOrDefault();
 
             if (categoria == null)
             {
-                return NotFound();
+                return Json(new { success = false, error = "Categoría no encontrada." });
             }
 
-            return Json(categoria);
+            return Json(new { success = true, categoria });
         }
-
-
-        // GET: CategoriaInsumos/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.CategoriaInsumos == null)
-            {
-                return NotFound();
-            }
-
-            var categoriaInsumo = await _context.CategoriaInsumos
-                .FirstOrDefaultAsync(m => m.IdCategoria == id);
-            if (categoriaInsumo == null)
-            {
-                return NotFound();
-            }
-
-            return View(categoriaInsumo);
-        }
-
-        // POST: CategoriaInsumos/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.CategoriaInsumos == null)
-            {
-                return Problem("Entity set 'FugazContext.CategoriaInsumos'  is null.");
-            }
-            var categoriaInsumo = await _context.CategoriaInsumos.FindAsync(id);
-            if (categoriaInsumo != null)
-            {
-                _context.CategoriaInsumos.Remove(categoriaInsumo);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: CategoriaInsumos/GetCategoriaInsumoDetails/5
-        public async Task<IActionResult> GetCategoriaInsumoDetails(int? id)
-        {
-            if (id == null || _context.CategoriaInsumos == null)
-            {
-                return NotFound();
-            }
-
-            var categoriaInsumo = await _context.CategoriaInsumos.FirstOrDefaultAsync(m => m.IdCategoria == id);
-            if (categoriaInsumo == null)
-            {
-                return NotFound();
-            }
-
-            return Json(categoriaInsumo);
-        }
-
-        // POST: CategoriaInsumos/DeleteCategoriaInsumo/5
         [HttpPost]
-        public async Task<IActionResult> DeleteCategoriaInsumo(int id)
+        public IActionResult EditModal(int idCategoria, string nombreCategoria)
         {
-            if (_context.CategoriaInsumos == null)
+            if (string.IsNullOrWhiteSpace(nombreCategoria))
             {
-                return Problem("Entity set 'FugazContext.CategoriaInsumos' is null.");
+                return Json(new { success = false, error = "El nombre de la categoría no puede estar vacío." });
             }
 
-            var categoriaInsumo = await _context.CategoriaInsumos.FindAsync(id);
-            if (categoriaInsumo == null)
+            var categoria = _context.CategoriaInsumos.Find(idCategoria);
+            if (categoria == null)
             {
-                return NotFound();
+                return Json(new { success = false, error = "Categoría no encontrada." });
             }
 
-            if (_context.Insumos.Any(i => i.IdCategoria == id))
+            // Verificar si ya existe otra categoría con el mismo nombre
+            var categoriaExiste = _context.CategoriaInsumos.Any(c => c.NombreCategoria == nombreCategoria && c.IdCategoria != idCategoria);
+            if (categoriaExiste)
             {
-                return BadRequest("La categoría de insumo no puede ser eliminada porque tiene uno o varios insumos asociados.");
+                return Json(new { success = false, error = "Ya existe una categoría con este nombre." });
             }
 
-            _context.CategoriaInsumos.Remove(categoriaInsumo);
-            await _context.SaveChangesAsync();
+            categoria.NombreCategoria = nombreCategoria;
+            _context.SaveChanges();
 
-            return Ok();
+            return Json(new { success = true, categoria = new { idCategoria = categoria.IdCategoria, nombreCategoria = categoria.NombreCategoria, estadoCategoria = categoria.EstadoCategoria } });
         }
+
+
+
+
+        [HttpGet]
+        public IActionResult GetCategoriaDetails(int idCategoria)
+        {
+            var categoria = _context.CategoriaInsumos
+                .Where(c => c.IdCategoria == idCategoria)
+                .Select(c => new {
+                    nombreCategoria = c.NombreCategoria,
+                    estadoCategoria = c.EstadoCategoria
+                })
+                .FirstOrDefault();
+
+            if (categoria == null)
+            {
+                return Json(new { success = false, error = "Categoría no encontrada." });
+            }
+
+            return Json(new { success = true, categoria });
+        }
+
 
         private bool CategoriaInsumoExists(int id)
         {

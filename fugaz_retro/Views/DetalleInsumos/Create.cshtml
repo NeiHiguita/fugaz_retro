@@ -1,50 +1,287 @@
 ﻿@model fugaz_retro.Models.DetalleInsumo
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Crear Ficha Técnica";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Convertir la foto del producto a base64 si está disponible
+    var fotoProducto = ViewBag.FotoProducto as byte[];
+    var fotoBase64 = fotoProducto != null ? Convert.ToBase64String(fotoProducto) : string.Empty;
+
 }
 <div class="tbl">
-
-<h1>Create</h1>
-
-<h4>DetalleInsumo</h4>
-<hr />
-<div class="row">
+    <h1>@ViewData["Title"]</h1>
+    <hr />
+    <div class="container">
         <form asp-action="Create" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="row">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="row">
+                    <!-- Columna izquierda: Producto y Tallas -->
                     <div class="col-sm-6">
                         <!-- Campo oculto para la clave primaria -->
-            <input type="hidden" asp-for="IdDetalleInsumo" />
+                        <input type="hidden" asp-for="IdDetalleInsumo" />
 
-            <div class="form-group">
-                <label asp-for="IdDetalleProducto" class="control-label"></label>
-                <select asp-for="IdDetalleProducto" class="form-control" asp-items="ViewBag.IdDetalleProducto"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="IdInsumo" class="control-label"></label>
-                <select asp-for="IdInsumo" class="form-control" asp-items="ViewBag.IdInsumo"></select>
-            </div>
+                        <!-- Fila para nombre del producto y tallas -->
+                        <div class="row">
+                            <!-- Mostrar el nombre del producto -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <h4 class="text-center font-weight-bold mb-3">Producto</h4>
+                                    <p class="text-center font-weight-bold mb-3" style="font-size: 1.25rem;">@ViewBag.NombreProducto</p>
+                                    <input type="hidden" asp-for="IdDetalleProducto" id="idDetalleProducto" />
+                                </div>
+                            </div>
+
+                            <!-- Mostrar las tallas disponibles -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <h4 class="text-center font-weight-bold mb-3">Tallas disponibles</h4>
+                                    <p id="tallasDisponibles" class="text-center font-weight-bold" style="font-size: 1.25rem;">
+                                        @string.Join(" - ", ViewBag.Tallas)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 custom-margin-top">
+                            <div class="form-group">
+                                <label class="control-label">Color</label>
+                                <select class="form-control" id="colorSelect" onchange="updateTable()">
+                                    <option value="">Selecciona un color</option>
+                                    @foreach (var color in ViewBag.Colores)
+                                    {
+                                        <option value="@color">@color</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Columna derecha: Foto del producto -->
                     <div class="col-sm-6">
-                        <div class="form-group">
-                <label asp-for="Cantidad" class="control-label"></label>
-                <input asp-for="Cantidad" class="form-control" />
-                <span asp-validation-for="Cantidad" class="text-danger"></span>
-            </div>
+                        <div class="form-group text-center">
+                            @if (!string.IsNullOrEmpty(fotoBase64))
+                            {
+                                <img src="data:image/jpeg;base64,@fotoBase64" alt="Foto del Producto" class="img-thumbnail" />
+                            }
+                            else
+                            {
+                                <p>No hay foto disponible</p>
+                            }
+                        </div>
                     </div>
+                </div>
+                <hr />
+
+                <h3 class="mb-4">Asocia Insumos</h3>
+                <!-- Fila para ingresar los detalles -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="insumo">Insumo</label>
+                            <select id="insumo" name="IdInsumo" class="form-control">
+                                <option value="">Selecciona insumo</option>
+                                @if (ViewBag.Insumos != null)
+                                {
+                                    @foreach (var insumo in ViewBag.Insumos as IEnumerable<SelectListItem>)
+                                    {
+                                        <option value="@insumo.Value">@insumo.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="cantidad">Cantidad</label>
+                            <input type="number" id="cantidad" class="form-control" placeholder="Cantidad" step="0.01" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="unidadMedida">Unidad de Medida</label>
+                            <select id="unidadMedida" class="form-control">
+                                <option value="">Unidad de medida</option>
+                                <option value="Metros">Metros</option>
+                                <option value="Centímetros">Centímetros</option>
+                                <option value="Unidad">Unidad</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" onclick="addRow()">Añadir Insumo</button>
+                    </div>
+                </div>
+
+                <!-- Div para las tablas de cada color -->
+                <div id="tablesContainer">
+                    <!-- Tablas se generarán aquí -->
+                </div>
+
+                <!-- Div para los campos ocultos de cada color -->
+                @foreach (var color in ViewBag.Colores)
+                {
+                    <div id="hiddenFields-@color.Replace(" ", "")" style="display: none;">
+                        <!-- Los campos ocultos se agregarán dinámicamente aquí -->
+                    </div>
+                }
+
                 <div class="form-group">
                     <br />
-                    <input type="submit" value="Crear" class="btn btn-sm btn-success" />
-                        <a asp-action="Index" class="btn btn-sm btn-secondary">Regresar</a>
+                    <input type="submit" value="Crear" class="btn btn-success btn-sm" />
+                    <a asp-action="Index" class="btn btn-secondary btn-sm">Regresar</a>
                 </div>
-                </div>
+            </div>
         </form>
+    </div>
 </div>
-</div>
+
+
+<style>
+    .img-thumbnail {
+        max-width: 300px; /* Ajusta el ancho máximo según lo necesites */
+        height: 300px; /* Mantiene la relación de aspecto */
+        border: 2px solid #ddd; /* Color del borde y grosor */
+        border-radius: 4px; /* Bordes redondeados */
+        padding: 4px; /* Espaciado interno entre la imagen y el borde */
+        background-color: #f8f9fa; /* Color de fondo para el área de la imagen */
+    }
+
+    .form-control-plaintext {
+        border: none;
+        background-color: transparent;
+        font-size: 1rem;
+    }
+
+    .custom-margin-top {
+        margin-top: 60px; /* Ajusta el valor según lo necesites */
+    }
+
+</style>
+
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        const colorTables = {};
+        let detalleIndex = 0;
+
+        // Función para actualizar o crear la tabla según el color seleccionado
+        function updateTable() {
+            const color = document.getElementById('colorSelect').value;
+            const tablesContainer = document.getElementById('tablesContainer');
+
+            // Si no se selecciona un color, no hacer nada
+            if (!color) {
+                return;
+            }
+
+            // Verificar si ya existe una tabla para el color seleccionado
+            if (!colorTables[color]) {
+                // Crear una nueva tabla para el color seleccionado
+                const tableDiv = document.createElement('div');
+                tableDiv.className = 'table-container';
+                tableDiv.innerHTML = `
+                                            <h4>Asocia insumos para la elaboración del producto en color ${color}</h4>
+                                            <div class="table-responsive">
+                                                <table id="table-${color.replace(/\s+/g, '')}" class="table table-striped table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Insumo</th>
+                                                            <th>Cantidad</th>
+                                                            <th>Unidad de Medida</th>
+                                                            <th>Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="insumoRows-${color.replace(/\s+/g, '')}">
+                                                        <!-- Aquí se agregarán dinámicamente los detalles -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        `;
+                tablesContainer.appendChild(tableDiv);
+                colorTables[color] = insumoRows - ${ color.replace(/\s+/g, '') };
+            }
+
+            // Mostrar solo la tabla del color seleccionado
+            document.querySelectorAll('.table-container').forEach(container => {
+                container.style.display = 'none';
+            });
+            const selectedTable = document.getElementById(colorTables[color]);
+            if (selectedTable) {
+                selectedTable.closest('.table-container').style.display = 'block';
+            }
+
+            // Mostrar los campos ocultos para el color seleccionado
+            document.querySelectorAll('[id^="hiddenFields-"]').forEach(container => {
+                container.style.display = 'none';
+            });
+            const selectedHiddenFields = document.getElementById(hiddenFields - ${ color.replace(/\s+/g, '') });
+            if (selectedHiddenFields) {
+                selectedHiddenFields.style.display = 'block';
+            }
+        }
+
+        // Función para añadir una fila a la tabla
+        function addRow() {
+            const color = document.getElementById('colorSelect').value;
+            const insumoSelect = document.getElementById('insumo');
+            const cantidad = document.getElementById('cantidad').value;
+            const unidadMedida = document.getElementById('unidadMedida').value;
+            const idDetalleProducto = document.getElementById('idDetalleProducto').value;
+
+            // Validar campos
+            if (!color || !insumoSelect.value || !cantidad || !unidadMedida || !idDetalleProducto) {
+                alert('Por favor, complete todos los campos.');
+                return;
+            }
+
+            const tableBodyId = colorTables[color];
+            if (!tableBodyId) {
+                alert('Por favor, seleccione un color.');
+                return;
+            }
+
+            const tableBody = document.getElementById(tableBodyId);
+            const newRow = tableBody.insertRow();
+
+            // Crear celdas
+            const cell1 = newRow.insertCell(0);
+            const cell2 = newRow.insertCell(1);
+            const cell3 = newRow.insertCell(2);
+            const cell4 = newRow.insertCell(3);
+
+            // Crear y añadir elementos a las celdas
+            cell1.innerHTML = insumoSelect.options[insumoSelect.selectedIndex].text;
+            cell2.innerHTML = cantidad;
+            cell3.innerHTML = unidadMedida;
+            cell4.innerHTML = <button type="button" class="btn btn-danger" onclick = "removeRow(this)" > Eliminar < /button>;
+
+            // Crear y añadir campos ocultos con índices para enlazarlos correctamente al modelo
+            const hiddenInputs = document.createElement('div');
+            hiddenInputs.innerHTML = `
+                                        <input type="hidden" name="DetalleInsumo[${detalleIndex}].IdInsumo" value="${insumoSelect.value}" />
+                                        <input type="hidden" name="DetalleInsumo[${detalleIndex}].Cantidad" value="${cantidad}" />
+                                        <input type="hidden" name="DetalleInsumo[${detalleIndex}].UnidadMedida" value="${unidadMedida}" />
+                                        <input type="hidden" name="DetalleInsumo[${detalleIndex}].Color" value="${color}" />
+                                        <input type="hidden" name="DetalleInsumo[${detalleIndex}].IdDetalleProducto" value="${idDetalleProducto}" />
+                                    `;
+            document.getElementById(hiddenFields - ${ color.replace(/\s+/g, '') }).appendChild(hiddenInputs);
+
+            detalleIndex++;
+
+            // Limpiar los campos
+            insumoSelect.value = '';
+            document.getElementById('cantidad').value = '';
+            document.getElementById('unidadMedida').value = '';
+        }
+
+        // Función para eliminar una fila
+        function removeRow(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    </script>
 }

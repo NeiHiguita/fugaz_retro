@@ -8,19 +8,17 @@
 <div class="tbl">
     <h1>Crear Producto</h1>
     <hr />
-    <form asp-controller="Productos" asp-action="Create" method="post" enctype="multipart/form-data">
+    <form id="createProductForm" asp-controller="Productos" asp-action="Create" method="post" enctype="multipart/form-data">
         <div class="row">
             <div class="col-sm-6">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="NombreProducto" class="control-label">Nombre Producto</label>
                     <input asp-for="NombreProducto" class="form-control" />
-                    <span asp-validation-for="NombreProducto" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="PrecioVenta" class="control-label">Precio venta</label>
                     <input asp-for="PrecioVenta" class="form-control" />
-                    <span asp-validation-for="PrecioVenta" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label for="Foto" class="control-label">Foto Producto</label>
@@ -29,6 +27,7 @@
                 <div class="form-group">
                     <label asp-for="CategoriaProducto" class="control-label">Selecciona una categoría:</label>
                     <select asp-for="CategoriaProducto" class="form-control" id="categoriaProducto">
+                        <option value="">Selecciona una categoría</option>
                         <option value="vestidos">Vestidos</option>
                         <option value="faldas">Faldas</option>
                         <option value="mom_pats">Mom Pats</option>
@@ -37,12 +36,10 @@
                         <option value="shorts">Shorts</option>
                         <option value="blusas">Blusas</option>
                     </select>
-                    <span asp-validation-for="CategoriaProducto" class="text-danger"></span>
                 </div>
-
             </div>
             <div class="col-sm-6 primg">
-                <img class="imgproduct" id="FotoPreview" src="#" alt="Comprobante de Pago" />
+                <img class="imgproduct" id="FotoPreview" src="#" alt="Comprobante de Pago" style="display:none;" />
             </div>
         </div>
         <h4>Detalles del Producto</h4>
@@ -98,7 +95,7 @@
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         const tallasNumericas = ["6", "8", "10", "12", "14", "16"];
         const tallasTexto = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -124,7 +121,93 @@
         $(document).ready(function () {
             actualizarOpcionesTalla();
             $("#categoriaProducto").change(actualizarOpcionesTalla);
+
+
+            $('#createProductForm').on('submit', function (event) {
+                event.preventDefault(); // Evita el envío por defecto del formulario
+
+                // Validar Nombre Producto
+                if ($('#NombreProducto').val().trim() === '') {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Debes ingresar un nombre para el producto.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Validar Precio Venta
+                var precioVenta = $('#PrecioVenta').val().trim();
+                if (precioVenta === '' || isNaN(precioVenta) || parseFloat(precioVenta) <= 0) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Debes ingresar un precio de venta válido.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Validar Foto Producto
+                if ($('#Foto').get(0).files.length === 0) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Debes seleccionar una foto para el producto.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Validar Categoría Producto
+                if ($('#categoriaProducto').val() === '') {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Debes seleccionar una categoría para el producto.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Validar Detalles de Producto
+                if ($('#tallasHiddenInput').val().trim() === '' || $('#coloresHiddenInput').val().trim() === '') {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Debes agregar al menos una talla y un color para el producto.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Si la validación es exitosa, proceder con la solicitud AJAX
+                var form = $(this);
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        // No mostrar alerta, ya que se redirige en el servidor
+                        window.location.href = response.redirectUrl; // Redirige a la URL proporcionada por el servidor
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Hubo un problema al crear el producto. Inténtalo nuevamente.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
         });
+
 
         function addTalla() {
             var talla = $("#tallaProducto").val();
@@ -151,18 +234,9 @@
 
             var newRow = $("<tr>");
             newRow.append("<td>" + talla + "</td>");
-            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeTalla(this)'>Eliminar</button></td>");
+            newRow.append('<td><button type="button" class="btn btn-danger" onclick="removeRow(this)">Eliminar</button></td>');
 
             $("#tallasTable tbody").append(newRow);
-            $("#tallaProducto").val('');
-        }
-
-        function removeTalla(btn) {
-            var index = $(btn).closest("tr").index() - 1;
-            var tallas = JSON.parse($("#tallasHiddenInput").val() || "[]");
-            tallas.splice(index, 1);
-            $("#tallasHiddenInput").val(JSON.stringify(tallas));
-            $(btn).closest("tr").remove();
         }
 
         function addColor() {
@@ -190,21 +264,16 @@
 
             var newRow = $("<tr>");
             newRow.append("<td>" + color + "</td>");
-            newRow.append("<td><button type='button' class='btn btn-danger' onclick='removeColor(this)'>Eliminar</button></td>");
+            newRow.append('<td><button type="button" class="btn btn-danger" onclick="removeRow(this)">Eliminar</button></td>');
 
             $("#coloresTable tbody").append(newRow);
-            $("#colorProducto").val('');
         }
 
-        function removeColor(btn) {
-            var index = $(btn).closest("tr").index() - 1;
-            var colores = JSON.parse($("#coloresHiddenInput").val() || "[]");
-            colores.splice(index, 1);
-            $("#coloresHiddenInput").val(JSON.stringify(colores));
-            $(btn).closest("tr").remove();
+        function removeRow(button) {
+            $(button).closest("tr").remove();
         }
 
-        $('input[type="file"]').change(function (e) {
+        $("#Foto").change(function () {
             var reader = new FileReader();
             reader.onload = function (e) {
                 $('#FotoPreview').attr('src', e.target.result).show();

@@ -111,83 +111,66 @@
 
     </table>
 </div
-<!-- Modal de Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-size modal-dialog-centered" role="document">
-        <!-- Clase modal-lg para aumentar el tamaño del modal -->
+<!-- Modal para Detalles del Insumo -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="detailsModalLabel">Detalles del Insumo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- El contenido del modal se actualizará mediante JavaScript -->
+                <dl class="row">
+                    <dt class="col-sm-4">Nombre:</dt>
+                    <dd class="col-sm-8" id="nombreInsumoDetails"></dd>
+                    <dt class="col-sm-4">Categoría:</dt>
+                    <dd class="col-sm-8" id="categoriaDetails"></dd>
+                    <dt class="col-sm-4">Tipo:</dt>
+                    <dd class="col-sm-8" id="tipoDetails"></dd>
+                    <dt class="col-sm-4">Stock:</dt>
+                    <dd class="col-sm-8" id="stockDetails"></dd>
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8" id="estadoDetails"></dd>
+                    <dt class="col-sm-4">Precio Unitario:</dt>
+                    <dd class="col-sm-8" id="precioUnitarioDetails"></dd>
+                </dl>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
-<style>
 
-    .custom-modal-size .modal-dialog {
-        max-width: 800px; /* Ajusta el ancho máximo como prefieras */
-        margin: 30px auto; /* Espaciado vertical si lo deseas */
-    }
 
-    .custom-modal-size .modal-content {
-        padding: 20px; /* Ajusta el padding según lo necesites */
-    }
-</style>
-
-<style>
-
-    .custom-modal-size .modal-dialog {
-        max-width: 800px; /* Ajusta el ancho máximo como prefieras */
-        margin: 30px auto; /* Espaciado vertical si lo deseas */
-    }
-
-    .custom-modal-size .modal-content {
-        padding: 20px; /* Ajusta el padding según lo necesites */
-    }
-</style>
 
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
 <link rel="stylesheet" href="~/css/site.css" />
 @section Scripts {
     <script>
-        function showDetailsModal(id) {
-            $.ajax({
-                url: '@Url.Action("Details", "Insumos")', // Asegúrate de que el nombre del controlador es correcto
-                type: 'GET',
-                data: { id: id },
-                success: function (data) {
-                    let content = `
-                        <div>
-                            <h5>Nombre:</h5>
-                            <p>${data.nombreInsumo || 'No disponible'}</p>
-                            <h5>Categoría:</h5>
-                            <p>${data.idCategoriaNavigation || 'No disponible'}</p>
-                            <h5>Tipo:</h5>
-                            <p>${data.categoriaInsumo || 'No disponible'}</p>
-                            <h5>Stock:</h5>
-                            <p>${data.stock || 'No disponible'}</p>
-                            <h5>Estado:</h5>
-                            <p>${data.estado || 'No disponible'}</p>
-                            <h5>Precio Unitario:</h5>
-                            <p>${data.precioUnitario ? `$${data.precioUnitario.toFixed(2)}` : 'No disponible'}</p>
-                        </div>
-                    `;
-                    $('#detailsModal .modal-body').html(content);
-                    $('#detailsModal').modal('show');
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error loading details:", error);
-                    alert("Ocurrió un error al cargar los detalles del insumo.");
-                }
-            });
+       function showDetailsModal(id) {
+    $.ajax({
+        url: '@Url.Action("Details", "Insumos")', // Asegúrate de que el nombre del controlador es correcto
+        type: 'GET',
+        data: { id: id },
+        success: function (data) {
+            // Asegúrate de que los datos coinciden con los ids en el modal
+            $('#nombreInsumoDetails').text(data.nombreInsumo || 'No disponible');
+            $('#categoriaDetails').text(data.idCategoriaNavigation || 'No disponible');
+            $('#tipoDetails').text(data.categoriaInsumo || 'No disponible');
+            $('#stockDetails').text(data.stock || 'No disponible');
+            $('#precioUnitarioDetails').text(data.precioUnitario ? $${data.precioUnitario} : 'No disponible');
+            $('#estadoDetails').text(data.estado);
+            // Mostrar el modal
+            $('#detailsModal').modal('show');
+        },
+        error: function (xhr, status, error) {
+            console.error("Error loading details:", error);
+            alert("Ocurrió un error al cargar los detalles del insumo.");
         }
-    </script>
+    });
 }
 
+    </script>
+}

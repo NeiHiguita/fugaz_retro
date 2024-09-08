@@ -78,6 +78,8 @@ namespace fugaz_retro.Controllers
                 _context.Add(producto);
                 await _context.SaveChangesAsync();
 
+                DetalleProducto ultimoDetalleProducto = null;
+
                 if (!string.IsNullOrEmpty(tallasHiddenInput))
                 {
                     var tallas = JsonConvert.DeserializeObject<List<DetalleProducto>>(tallasHiddenInput);
@@ -89,6 +91,7 @@ namespace fugaz_retro.Controllers
                             detalle.Talla = detalle.Talla ?? string.Empty;
                             detalle.Color = detalle.Color ?? string.Empty;
                             _context.DetalleProductos.Add(detalle);
+                            ultimoDetalleProducto = detalle; // Guardamos el último detalle añadido
                         }
                     }
                 }
@@ -102,16 +105,25 @@ namespace fugaz_retro.Controllers
                         {
                             detalle.IdProducto = producto.IdProducto;
                             _context.DetalleProductos.Add(detalle);
+                            ultimoDetalleProducto = detalle; // Guardamos el último detalle añadido
                         }
                     }
                 }
 
                 await _context.SaveChangesAsync();
+
+                if (ultimoDetalleProducto != null)
+                {
+                    var redirectUrl = Url.Action("Create", "DetalleInsumos", new { idDetalleProducto = ultimoDetalleProducto.IdDetalleProducto });
+                    return Json(new { redirectUrl });
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
             return View(producto);
         }
+
 
         // GET: Producto/Edit/5
         public async Task<IActionResult> Edit(int? id)

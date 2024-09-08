@@ -225,6 +225,10 @@
                     return;
                 }
 
+                if (unidadSeleccionada === 'Centimetros') {
+                    cantidadIngresada = cantidadIngresada / 100;
+                }
+
                 if (cantidadIngresada > stockDisponible) {
                     Swal.fire({
                         icon: 'error',

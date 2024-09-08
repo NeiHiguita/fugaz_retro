@@ -47,9 +47,10 @@
                                 <i class="fas fa-eye" style="color: #285d86; font-size: 22px"></i>
                             </a>
 
-                            <button class="btn btn-danger anular-btn" data-id="@item.IdPerdidaInsumo" data-cantidad="@item.Cantidad" data-insumo="@item.IdInsumo">
+                            <button class="btn btn-danger anular-btn" data-id="@item.IdPerdidaInsumo" data-cantidad="@item.Cantidad" data-insumo="@item.IdInsumo" data-unidadMedida="@item.UnidadMedida">
                                 Anular
                             </button>
+
                         </td>
                     </tr>
                 }
@@ -107,8 +108,9 @@
             // Evento de clic para el botón de anular
             $('.anular-btn').click(function () {
                 var idPerdidaInsumo = $(this).data('id');
-                var cantidad = $(this).data('cantidad');
+                var cantidad = ($(this).data('cantidad'));
                 var idInsumo = $(this).data('insumo');
+                var unidadMedida = $(this).data('unidadmedida');
 
                 Swal.fire({
                     title: '¿Estás seguro?',
@@ -125,7 +127,12 @@
                         $.ajax({
                             url: '@Url.Action("Anular", "PerdidaInsumos")',
                             type: 'POST',
-                            data: { id: idPerdidaInsumo, cantidad: cantidad, idInsumo: idInsumo },
+                            data: {
+                                id: idPerdidaInsumo,
+                                cantidad: cantidad,
+                                idInsumo: idInsumo,
+                                unidadMedida: unidadMedida
+                            },
                             success: function (response) {
                                 if (response.success) {
                                     Swal.fire(
@@ -142,11 +149,20 @@
                                         'error'
                                     );
                                 }
+                            },
+                            error: function () {
+                                Swal.fire(
+                                    'Error',
+                                    'Ocurrió un error al anular la pérdida de insumo.',
+                                    'error'
+                                );
                             }
                         });
                     }
                 });
             });
+
+
         });
     </script>
 }

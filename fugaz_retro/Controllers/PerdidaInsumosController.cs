@@ -99,16 +99,23 @@ namespace fugaz_retro.Controllers
                     return View(perdidaInsumo);
                 }
 
-                // Validar la cantidad ingresada
-                if (perdidaInsumo.Cantidad > insumo.Stock)
+                // Convertir la cantidad a metros si es necesario
+                double cantidadEnMetros = perdidaInsumo.Cantidad;
+                if (perdidaInsumo.UnidadMedida == "Centimetros")
+                {
+                    cantidadEnMetros = perdidaInsumo.Cantidad / 100.0;
+                }
+
+                // Validar la cantidad ingresada en metros
+                if (cantidadEnMetros > insumo.Stock)
                 {
                     ModelState.AddModelError("Cantidad", "La cantidad no puede ser mayor que el stock disponible.");
                     ViewData["IdInsumo"] = new SelectList(_context.Insumos, "IdInsumo", "NombreInsumo", perdidaInsumo.IdInsumo);
                     return View(perdidaInsumo);
                 }
 
-                // Restar la cantidad perdida del stock
-                insumo.Stock -= perdidaInsumo.Cantidad;
+                // Restar la cantidad convertida en metros del stock
+                insumo.Stock -= cantidadEnMetros;
 
                 // Actualizar el estado del insumo según el nuevo stock
                 insumo.Estado = insumo.Stock > 3 ? "Disponible" : "Agotado";
@@ -136,7 +143,7 @@ namespace fugaz_retro.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Anular(int id, int cantidad, int idInsumo)
+        public async Task<IActionResult> Anular(int id, double cantidad, int idInsumo, string unidadMedida)
         {
             try
             {
@@ -154,7 +161,12 @@ namespace fugaz_retro.Controllers
                     return NotFound();
                 }
 
-                insumo.Stock += cantidad; // Devolver la cantidad al stock
+                if (unidadMedida == "Centimetros")
+                {
+                    cantidad = cantidad / 100;
+                }
+
+                insumo.Stock += cantidad;
 
                 // Eliminar la pérdida de insumo
                 _context.PerdidaInsumos.Remove(perdidaInsumo);
@@ -162,11 +174,14 @@ namespace fugaz_retro.Controllers
 
                 return Json(new { success = true });
             }
-            catch
+            catch (Exception ex)
             {
+                // Log the exception message
+                Console.WriteLine($"Error al anular la pérdida de insumo: {ex.Message}");
                 return Json(new { success = false });
             }
         }
+
 
         // GET: PerdidaInsumos/Edit/5
         public async Task<IActionResult> Edit(int? id)

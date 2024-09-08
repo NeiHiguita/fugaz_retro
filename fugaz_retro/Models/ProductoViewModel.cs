@@ -8,6 +8,7 @@ namespace fugaz_retro.Models;
 public class ProductoViewModel
 {
     public List<Producto> Productos { get; set; }
+    public List<CostoEnvio> Ciudades { get; set; } // Nueva propiedad
     public List<DetalleProducto> DetalleProductos { get; set; }
     public List<Producto> NuevasTendencias { get; set; }
     public List<Producto> MasVendidos { get; set; }

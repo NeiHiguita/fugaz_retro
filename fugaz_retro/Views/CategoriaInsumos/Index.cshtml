@@ -21,19 +21,19 @@
         <table class="table table-striped table-bordered" id="Table">
             <thead class="thead-light">
                 <tr>
-                    <th>Nombre Categoría</th>
+                    <th>Nombre</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="categoriasTableBody">
                 @foreach (var item in Model.Categorias)
                 {
-                    <tr>
+                    <tr id="categoria_@item.IdCategoria">
                         <td>@Html.DisplayFor(modelItem => item.NombreCategoria)</td>
                         <td class="text-center">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="estadoSwitch_@item.IdCategoria" @(item.EstadoCategoria ? "checked" : "") onclick="toggleEstado(@item.IdCategoria)" />
+                                <input class="form-check-input" type="checkbox" id="estadoSwitch_@item.IdCategoria" @(item.EstadoCategoria ? "checked" : "") onchange="toggleEstado(@item.IdCategoria, this)" />
                             </div>
                         </td>
                         <td class="text-center">
@@ -68,8 +68,36 @@
                         <input asp-for="NuevaCategoria.NombreCategoria" class="form-control" id="nombreCategoriaInput" />
                         <span asp-validation-for="NuevaCategoria.NombreCategoria" class="text-danger"></span>
                     </div>
+
                     <div class="form-group text-center">
-                        <button type="submit" class="btn btn-primary">Crear</button>
+                        <button type="submit" class="btn btn-success">Crear</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para Editar Categoría de Insumo -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Categoría de Insumo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editCategoriaId" name="IdCategoria" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="NuevaCategoria.NombreCategoria" class="form-label">Nombre Categoría</label>
+                        <input asp-for="NuevaCategoria.NombreCategoria" class="form-control" id="editNombreCategoria" name="NombreCategoria" />
+                        <span asp-validation-for="NuevaCategoria.NombreCategoria" class="text-danger"></span>
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     </div>
                 </form>
@@ -105,222 +133,50 @@
         </div>
     </div>
 </div>
-<!-- Modal para Editar Categoría de Insumo -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Editar Categoría de Insumo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editForm">
-                    <input type="hidden" id="editCategoriaId" name="IdCategoria" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="NuevaCategoria.NombreCategoria" class="form-label">Nombre Categoría</label>
-                        <input asp-for="NuevaCategoria.NombreCategoria" class="form-control" id="editNombreCategoria" name="NombreCategoria" />
-                        <span asp-validation-for="NuevaCategoria.NombreCategoria" class="text-danger"></span>
-                    </div>
-                    <div class="form-group text-center">
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         $(document).ready(function () {
-            // Manejo del formulario de creación
+            // Manejo del formulario de creación con AJAX
             $("#createForm").submit(function (event) {
                 event.preventDefault();
 
-                var isValid = true;
-                var errorMessage = "";
-
-                var nombreCategoria = $("#nombreCategoriaInput").val();
-                if (!nombreCategoria) {
-                    isValid = false;
-                    errorMessage += "El nombre de la categoría es obligatorio.<br/>";
-                }
-
-                if (isValid) {
-                    $.ajax({
-                        url: '@Url.Action("CheckCategoriaExists", "CategoriaInsumos")',
-                        type: 'POST',
-                        data: { nombreCategoria: nombreCategoria },
-                        success: function (exists) {
-                            if (exists) {
-                                isValid = false;
-                                errorMessage += "Ya existe una categoría con este nombre.<br/>";
-                            }
-
-                            if (!isValid) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    html: errorMessage
-                                });
-                                return;
-                            }
-
-                            var formData = {
-                                NuevaCategoria: {
-                                    NombreCategoria: nombreCategoria,
-                                    EstadoCategoria: $("#Estado").is(":checked")
-                                }
-                            };
-
-                            $.ajax({
-                                url: '@Url.Action("CreateModal", "CategoriaInsumos")',
-                                type: 'POST',
-                                contentType: 'application/json; charset=utf-8',
-                                data: JSON.stringify(formData),
-                                success: function (result) {
-                                    if (result.success) {
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: '¡Éxito!',
-                                            text: 'La categoría se ha creado correctamente.',
-                                            timer: 1500, // Tiempo para que se muestre la alerta
-                                            willClose: () => {
-                                                $('#createModal').modal('hide'); // Cierra el modal de creación
-                                                location.reload(); // Recargar la página para actualizar la lista
-                                            }
-                                        });
-                                    } else {
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: '¡Error!',
-                                            text: result.error
-                                        });
-                                    }
-                                },
-                                error: function () {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: '¡Error!',
-                                        text: 'Hubo un problema al crear la categoría.'
-                                    });
-                                }
-                            });
-                        },
-                        error: function () {
-                            Swal.fire({
-                                icon: 'error',
-                                title: '¡Error!',
-                                text: 'Error al verificar la existencia de la categoría.'
-                            });
-                        }
-                    });
-                }
-            });
-
-            $('#editForm').submit(function (event) {
-                event.preventDefault();
-
-                var idCategoria = $('#editCategoriaId').val();
-                var nombreCategoria = $('#editNombreCategoria').val();
-                var estadoCategoria = $('#editEstadoCategoria').is(':checked');
+                var nombreCategoria = $("#nombreCategoriaInput").val().trim();
 
                 if (!nombreCategoria) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: 'El nombre de la categoría es obligatorio.'
+                        title: 'Campo Obligatorio',
+                        text: 'El nombre de la categoría no puede estar vacío.'
                     });
+                    $("#nombreCategoriaInput").focus();
                     return;
                 }
 
-                // Verificar si el nombre de la categoría ya existe (excluyendo la categoría actual)
                 $.ajax({
-                    url: '@Url.Action("CheckCategoriaExists", "CategoriaInsumos")',
+                    url: '@Url.Action("CreateModal", "CategoriaInsumos")',
                     type: 'POST',
-                    data: { nombreCategoria: nombreCategoria, idCategoria: idCategoria },
-                    success: function (exists) {
-                        if (exists) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Ya existe una categoría con este nombre.'
-                            });
-                            return;
-                        }
-
-                        var formData = {
-                            NuevaCategoria: {
-                                IdCategoria: idCategoria,
-                                NombreCategoria: nombreCategoria,
-                                EstadoCategoria: estadoCategoria
-                            }
-                        };
-
-                        $.ajax({
-                            url: '/CategoriaInsumos/Edit',
-                            type: 'POST',
-                            contentType: 'application/json; charset=utf-8',
-                            data: JSON.stringify(formData),
-                            success: function (response) {
-                                if (response.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: '¡Éxito!',
-                                        text: 'Categoría actualizada exitosamente.',
-                                        timer: 1500, // Tiempo para que se muestre la alerta
-                                        willClose: () => {
-                                            $('#editModal').modal('hide'); // Cierra el modal de edición
-                                            location.reload(); // Recargar la página para actualizar la lista
-                                        }
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: '¡Error!',
-                                        text: response.error || "Error al actualizar la categoría."
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: '¡Error!',
-                                    text: xhr.responseText || 'Hubo un problema al actualizar la categoría.'
-                                });
-                            }
-                        });
+                    data: {
+                        NombreCategoria: nombreCategoria
                     },
-                    error: function () {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: 'Error al verificar la existencia de la categoría.'
-                        });
-                    }
-                });
-            });
-
-            // Función para cargar los detalles de la categoría
-            window.loadCategoriaInsumo = function (id) {
-                $.ajax({
-                    url: '/CategoriaInsumos/GetCategoriaInsumoDetails/' + id,
-                    type: 'GET',
-                    success: function (data) {
-                        if (data) {
-                            $('#editCategoriaId').val(data.idCategoria);
-                            $('#editNombreCategoria').val(data.nombreCategoria);
-                            $('#editEstadoCategoria').prop('checked', data.estadoCategoria);
-                            $('#editModal').modal('show');
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'Categoría creada correctamente.',
+                                timer: 1500
+                            }).then(function () {
+                                $('#createModal').modal('hide');
+                                agregarCategoriaTabla(response.categoria);
+                            });
                         } else {
                             Swal.fire({
                                 icon: 'error',
                                 title: '¡Error!',
-                                text: 'Error al cargar los datos de la categoría.'
+                                text: response.error
                             });
                         }
                     },
@@ -328,65 +184,193 @@
                         Swal.fire({
                             icon: 'error',
                             title: '¡Error!',
-                            text: 'Error al cargar los datos de la categoría.'
+                            text: 'Hubo un problema al crear la categoría.'
                         });
                     }
                 });
-            }
-
-            // Función para alternar el estado de la categoría
-            window.toggleEstado = function (id) {
-                $.ajax({
-                    url: '@Url.Action("ToggleEstado", "CategoriaInsumos")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function () {
-                        location.reload();
-                    },
-                    error: function () {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: 'Ocurrió un error al intentar cambiar el estado.'
-                        });
-                    }
-                });
-            }
-
-            // Función para cargar los detalles de la categoría en el modal
-            window.loadDetails = function (id) {
-                $.ajax({
-                    url: '@Url.Action("Details", "CategoriaInsumos")',
-                    type: 'GET',
-                    data: { id: id },
-                    success: function (result) {
-                        $("#nombreCategoriaDetails").text(result.nombreCategoria);
-                        $("#estadoSwitchDetails").prop('checked', result.estadoCategoria);
-
-                        $("#detailsModal").modal('show');
-                    },
-                    error: function () {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: 'Hubo un problema al cargar los detalles.'
-                        });
-                    }
-                });
-            }
-
-            $(document).on('keydown', function (e) {
-                if (e.key === 'Enter') {
-                    // Si hay una alerta activa, ciérrala
-                    if (Swal.isVisible()) {
-                        Swal.close();
-                    }
-
-                    // Cierra los modales abiertos
-                    $('#createModal').modal('hide');
-                    $('#editModal').modal('hide');
-                }
             });
+
+            // Manejo del formulario de edición con AJAX
+            $("#editForm").submit(function (event) {
+                event.preventDefault();
+
+                var idCategoria = $("#editCategoriaId").val();
+                var nombreCategoria = $("#editNombreCategoria").val().trim();
+
+                if (!nombreCategoria) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campo Obligatorio',
+                        text: 'El nombre de la categoría no puede estar vacío.'
+                    });
+                    $("#editNombreCategoria").focus();
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("EditModal", "CategoriaInsumos")',
+                    type: 'POST',
+                    data: {
+                        IdCategoria: idCategoria,
+                        NombreCategoria: nombreCategoria
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'Categoría actualizada correctamente.',
+                                timer: 1500
+                            }).then(function () {
+                                $('#editModal').modal('hide');
+                                actualizarCategoriaTabla(response.categoria);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: response.error
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al actualizar la categoría.'
+                        });
+                    }
+                });
+            });
+
+            // Función para cargar datos en el modal de edición
+            window.loadCategoriaInsumo = function (idCategoria) {
+                $.ajax({
+                    url: '@Url.Action("GetCategoria", "CategoriaInsumos")',
+                    type: 'GET',
+                    data: { idCategoria: idCategoria },
+                    success: function (response) {
+                        if (response.success) {
+                            $("#editCategoriaId").val(response.categoria.idCategoria);
+                            $("#editNombreCategoria").val(response.categoria.nombreCategoria);
+                            $("#editModal").modal('show');
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: response.error
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al cargar la categoría.'
+                        });
+                    }
+                });
+            };
+
+            // Función para actualizar la fila de la categoría en la tabla
+            function actualizarCategoriaTabla(categoria) {
+                var estadoChecked = categoria.estadoCategoria ? 'checked' : '';
+
+                var filaActualizada = `
+                <tr id="categoria_${categoria.idCategoria}">
+                    <td>${categoria.nombreCategoria}</td>
+                    <td class="text-center">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="estadoSwitch_${categoria.idCategoria}" ${estadoChecked} onclick="toggleEstado(${categoria.idCategoria})" />
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <a href="javascript:void(0);" onclick="loadCategoriaInsumo(${categoria.idCategoria})" class="icon-link">
+                            <i class="fas fa-pencil-alt" style="color: green; font-size: 22px"></i>
+                        </a>
+                        <a href="#" onclick="loadDetails(${categoria.idCategoria}); return false;">
+                            <i class="fas fa-eye" style="color: #285d86; font-size: 22px; margin-right: 20px"></i>
+                        </a>
+                    </td>
+                </tr>`;
+
+                $(#categoria_${categoria.idCategoria}).replaceWith(filaActualizada);
+            }
+
+            // Función para manejar el estado de la categoría
+            window.toggleEstado = function (idCategoria, checkboxElement) {
+                var estado = $(checkboxElement).is(':checked'); // Obtiene el estado del checkbox (true o false)
+
+                $.ajax({
+                    url: '@Url.Action("UpdateEstado", "CategoriaInsumos")',
+                    type: 'POST',
+                    data: {
+                        IdCategoria: idCategoria,
+                        EstadoCategoria: estado
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'El estado de la categoría se ha actualizado correctamente.',
+                                timer: 1500
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: response.error
+                            });
+
+                            // Revertir el estado del checkbox en caso de error
+                            $(checkboxElement).prop('checked', !estado);
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al actualizar el estado de la categoría.'
+                        });
+
+                        // Revertir el estado del checkbox en caso de error
+                        $(checkboxElement).prop('checked', !estado);
+                    }
+                });
+            };
+            // Función para cargar detalles de la categoría en el modal
+            window.loadDetails = function (idCategoria) {
+                $.ajax({
+                    url: '@Url.Action("GetCategoriaDetails", "CategoriaInsumos")',
+                    type: 'GET',
+                    data: { idCategoria: idCategoria },
+                    success: function (response) {
+                        if (response.success) {
+                            $("#nombreCategoriaDetails").text(response.categoria.nombreCategoria);
+                            $("#estadoSwitchDetails").prop('checked', response.categoria.estadoCategoria);
+                            $("#estadoSwitchDetails").next('label').text(response.categoria.estadoCategoria ? 'Activo' : 'Inactivo');
+                            $("#detailsModal").modal('show');
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: response.error
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Hubo un problema al cargar los detalles de la categoría.'
+                        });
+                    }
+                });
+            };
+
         });
+
+
     </script>
 }

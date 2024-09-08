@@ -30,8 +30,8 @@
                         <input asp-for="NombreInsumo" class="form-control" />
                         <span asp-validation-for="NombreInsumo" class="text-danger"></span>
                     </div>
-                    </div>
-                    <div class="col-md-6">
+                </div>
+                <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="UnidadMedida" class="control-label">Unidad de Medida</label>
                         <select id="unidadMedida" asp-for="UnidadMedida" class="form-control">
@@ -99,32 +99,52 @@
             var isValid = true;
             var errorMessage = "";
 
+            // Validación para cada campo
             if (!$("select[name='IdCategoria']").val()) {
                 isValid = false;
-                errorMessage += "La categoría es obligatoria.<br/>";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campo Obligatorio',
+                    text: 'La categoría es obligatoria.'
+                });
+                $("select[name='IdCategoria']").addClass('has-error');
+                return;
+            }
+            if (!$("select[name='CategoriaInsumo']").val()) {
+                isValid = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campo Obligatorio',
+                    text: 'La categoría del insumo es obligatoria.'
+                });
+                $("select[name='CategoriaInsumo']").addClass('has-error');
+                return;
             }
 
             if (!$("input[name='NombreInsumo']").val()) {
                 isValid = false;
-                errorMessage += "El nombre del insumo es obligatorio.<br/>";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campo Obligatorio',
+                    text: 'El nombre del insumo es obligatorio.'
+                });
+                $("input[name='NombreInsumo']").addClass('has-error');
+                return;
             }
 
-            if (!$("select[name='CategoriaInsumo']").val()) {
-                isValid = false;
-                errorMessage += "La categoría del insumo es obligatoria.<br/>";
-            }
 
             if (!$("select[name='UnidadMedida']").val()) {
                 isValid = false;
-                errorMessage += "La unidad de medida es obligatoria.<br/>";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campo Obligatorio',
+                    text: 'La unidad de medida es obligatoria.'
+                });
+                $("select[name='UnidadMedida']").addClass('has-error');
+                return;
             }
 
             if (!isValid) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Campos obligatorios',
-                    html: errorMessage
-                });
                 return;
             }
 

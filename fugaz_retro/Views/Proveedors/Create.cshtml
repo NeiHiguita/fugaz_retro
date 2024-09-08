@@ -58,7 +58,7 @@
                         </small>
                     </div>
 
-                    <!-- Fila para Teléfono y Celular -->
+                    <!-- Fila para Teléfono, Prefijo y Celular -->
                     <div class="row">
                         <!-- Campo para Teléfono -->
                         <div class="col-md-4">
@@ -68,31 +68,40 @@
                             </div>
                         </div>
 
-                        <!-- Campo para Celular -->
+                        <!-- Contenedor para el Prefijo y Número Celular -->
                         <div class="col-md-8">
-                            <div class="form-group">
-                                <label for="TelefonoCelular" class="control-label">Celular</label>
-                                <div class="input-group">
-                                    <select id="PrefijoCelular" class="form-control" style="width: 20%; min-width: 80px;">
-                                        <option value="">Prefijo</option>
-                                        <option value="302">302</option>
-                                        <option value="303">303</option>
-                                        <option value="304">304</option>
-                                        <option value="305">305</option>
-                                        <option value="311">311</option>
-                                        <option value="312">312</option>
-                                        <option value="313">313</option>
-                                        <option value="314">314</option>
-                                        <option value="315">315</option>
-                                        <option value="316">316</option>
-                                        <option value="317">317</option>
-                                        <option value="318">318</option>
-                                        <option value="319">319</option>
-                                        <option value="320">320</option>
-                                        <option value="321">321</option>
-                                        <option value="322">322</option>
-                                    </select>
-                                    <input id="Celular" class="form-control" style="flex: 1;" placeholder="Número celular (10 dígitos)" />
+                            <div class="row">
+                                <!-- Contenedor del Prefijo -->
+                                <div class="col-md-3 p-0">
+                                    <div class="form-group mb-0">
+                                        <label for="PrefijoCelular" class="control-label">Prefijo</label>
+                                        <select id="PrefijoCelular" class="form-control">
+                                            <option value=""></option>
+                                            <option value="302">302</option>
+                                            <option value="303">303</option>
+                                            <option value="304">304</option>
+                                            <option value="305">305</option>
+                                            <option value="311">311</option>
+                                            <option value="312">312</option>
+                                            <option value="313">313</option>
+                                            <option value="314">314</option>
+                                            <option value="315">315</option>
+                                            <option value="316">316</option>
+                                            <option value="317">317</option>
+                                            <option value="318">318</option>
+                                            <option value="319">319</option>
+                                            <option value="320">320</option>
+                                            <option value="321">321</option>
+                                            <option value="322">322</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Contenedor del Número Celular -->
+                                <div class="col-md-8 p-0">
+                                    <div class="form-group mb-0">
+                                        <label for="PrefijoCelular" class="control-label">Número</label>
+                                        <input id="Celular" class="form-control" placeholder="Completa el número" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -319,4 +328,3 @@
         });
     </script>
 }
-

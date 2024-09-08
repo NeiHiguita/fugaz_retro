@@ -309,7 +309,9 @@ public partial class FugazContext : IdentityDbContext
             entity.Property(e => e.IdDetalleInsumo).HasColumnName("Id_Detalle_Insumo");
             entity.Property(e => e.IdDetalleProducto).HasColumnName("Id_Detalle_Producto");
             entity.Property(e => e.IdInsumo).HasColumnName("Id_Insumo");
-            entity.Property(e => e.Cantidad).HasColumnName("Cantidad");
+            entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+            entity.Property(e => e.UnidadMedida).HasColumnName("unidad_medida");
+            entity.Property(e => e.Color).HasColumnName("color");
 
             entity.HasOne(d => d.DetalleProducto)
                   .WithMany(p => p.DetalleInsumos)

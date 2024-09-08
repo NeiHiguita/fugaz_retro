@@ -83,60 +83,37 @@
         </tbody>
     </table>
 </div>
-<!-- Modal de Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-size modal-dialog-centered" role="document">
-        <!-- Clase modal-lg para aumentar el tamaño del modal -->
+<!-- Modal para Detalles del Proveedor -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="detailsModalLabel">Detalles del Proveedor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- El contenido del modal se actualizará mediante JavaScript -->
+                <dl class="row">
+                    <dt class="col-sm-4">Nombre/Empresa:</dt>
+                    <dd class="col-sm-8" id="NombreDetails"></dd>
+                    <dt class="col-sm-4">Documento/RUT:</dt>
+                    <dd class="col-sm-8" id="DocumentoDetails"></dd>
+                    <dt class="col-sm-4">Representante legal:</dt>
+                    <dd class="col-sm-8" id="RepresentanteDetails"></dd>
+                    <dt class="col-sm-4">Teléfono:</dt>
+                    <dd class="col-sm-8" id="TelefonoDetails"></dd>
+                    <dt class="col-sm-4">Dirección:</dt>
+                    <dd class="col-sm-8" id="DireccionDetails"></dd>
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8" id="EstadoDetails"></dd>
+                </dl>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
-<style>
 
-    .custom-modal-size .modal-dialog {
-        max-width: 800px; /* Ajusta el ancho máximo como prefieras */
-        margin: 30px auto; /* Espaciado vertical si lo deseas */
-    }
-
-    .custom-modal-size .modal-content {
-        padding: 20px; /* Ajusta el padding según lo necesites */
-    }
-</style>
-
-
-
-<div class="modal fade alinmodal" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmación de Eliminación</h5>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que quieres eliminar este proveedor?</p>
-                <div>
-                    <dl class="row">
-                        <dt class="col-sm-4">Nombre del proveedor:</dt>
-                        <dd class="col-sm-8" id="proveedorName"></dd>
-                    </dl>
-                </div>
-                <div class="alert alert-danger d-none" id="deleteError"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmDelete">Eliminar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
 <link rel="stylesheet" href="~/css/site.css" />
@@ -153,99 +130,56 @@
                 data: { id: id },
                 success: function (data) {
                     let content = `
-                                    <div class="container">
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                `;
+                                <dl class="row">
+                            `;
 
                     if (data.tipoProveedor === 'Natural') {
                         content += `
-                                        <dl class="row">
-                                            <div class="col-sm-6">
-                                                <dt>Nombre Completo:</dt>
-                                                <dd>${data.nombreCompleto || 'N/A'}</dd>
-                                                <dt>Documento:</dt>
-                                                <dd>${data.documento || 'N/A'}</dd>
-                                                <dt>Teléfono:</dt>
-                                                <dd>${data.telefono || 'N/A'}</dd>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <dt>Dirección Alternativa:</dt>
-                                                <dd>${data.direccionAlternativa || 'N/A'}</dd>
-                                                <dt>Estado:</dt>
-                                                <dd>${data.estado ? 'Activo' : 'Inactivo'}</dd>
-                                            </div>
-                                        </dl>
-                                    `;
+                                    <dt class="col-sm-4">Nombre Completo:</dt>
+                                    <dd class="col-sm-8">${data.nombreCompleto || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Documento:</dt>
+                                    <dd class="col-sm-8">${data.documento || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Teléfono:</dt>
+                                    <dd class="col-sm-8">${data.telefono || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Dirección Alternativa:</dt>
+                                    <dd class="col-sm-8">${data.direccionAlternativa || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Estado:</dt>
+                                    <dd class="col-sm-8">${data.estado ? 'Activo' : 'Inactivo'}</dd>
+                                `;
                     } else if (data.tipoProveedor === 'Jurídico') {
                         content += `
-                                        <dl class="row">
-                                            <div class="col-sm-6">
-                                                <dt>Empresa:</dt>
-                                                <dd>${data.empresa || 'N/A'}</dd>
-                                                <dt>Representante Legal:</dt>
-                                                <dd>${data.representanteLegal || 'N/A'}</dd>
-                                                <dt>RUT:</dt>
-                                                <dd>${data.rut || 'N/A'}</dd>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <dt>Teléfono:</dt>
-                                                <dd>${data.telefono || 'N/A'}</dd>
-                                                <dt>Dirección Alternativa:</dt>
-                                                <dd>${data.direccionAlternativa || 'N/A'}</dd>
-                                                <dt>Estado:</dt>
-                                                <dd>${data.estado ? 'Activo' : 'Inactivo'}</dd>
-                                            </div>
-                                        </dl>
-                                    `;
+                                    <dt class="col-sm-4">Empresa:</dt>
+                                    <dd class="col-sm-8">${data.empresa || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Representante Legal:</dt>
+                                    <dd class="col-sm-8">${data.representanteLegal || 'N/A'}</dd>
+                                    <dt class="col-sm-4">RUT:</dt>
+                                    <dd class="col-sm-8">${data.rut || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Teléfono:</dt>
+                                    <dd class="col-sm-8">${data.telefono || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Dirección Alternativa:</dt>
+                                    <dd class="col-sm-8">${data.direccionAlternativa || 'N/A'}</dd>
+                                    <dt class="col-sm-4">Estado:</dt>
+                                    <dd class="col-sm-8">${data.estado ? 'Activo' : 'Inactivo'}</dd>
+                                `;
                     }
 
                     content += `
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
+                                </dl>
+                            `;
 
                     $('#detailsModal .modal-body').html(content);
                     $('#detailsModal').modal('show');
                 },
                 error: function (xhr, status, error) {
                     console.error("Error loading details:", error);
-                    alert("Ocurrió un error al cargar los detalles del proveedor.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al cargar los detalles del proveedor.'
+                    });
                 }
             });
         }
-        function showDeleteModal(id, name) {
-            $('#proveedorName').text(name);
-            $('#btnConfirmDelete').attr('data-id', id);
-            $('#deleteModal').modal('show');
-        }
-
-        $(document).ready(function () {
-            $('#btnConfirmDelete').click(function () {
-                var id = $(this).data('id');
-                $.ajax({
-                    url: '@Url.Action("DeleteProveedor", "Proveedors")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (result) {
-                        $('#deleteModal').modal('hide');
-                        location.reload();
-                    },
-                    error: function (xhr, status, error) {
-                        if (xhr.status == 400) {
-                            $('#deleteError').text(xhr.responseText).removeClass('d-none');
-                        } else {
-                            $('#deleteError').text("Ocurrió un error al intentar eliminar el proveedor.").removeClass('d-none');
-                        }
-                    }
-                });
-            });
-
-            $('.btn-secondary').click(function () {
-                $('#deleteModal').modal('hide');
-            });
-        });
 
         function toggleEstado(id) {
             $.ajax({

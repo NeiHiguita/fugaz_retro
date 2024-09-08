@@ -13,7 +13,7 @@
         <div class="row">
             <div class="row">
                 <!-- Columna 1: Fecha de Compra -->
-                <div class="col-md-4">
+                <div class="col-sm-6">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input type="hidden" asp-for="IdInsumo" />
                     <div class="form-group">
@@ -21,29 +21,21 @@
                         <select asp-for="IdCategoria" class="form-control" asp-items="ViewBag.Categorias" readonly disabled></select>
                         <span asp-validation-for="IdCategoria" class="text-danger"></span>
                     </div>
-                </div>
 
-                <!-- Columna 2: Tipo de Proveedor -->
-                <div class="col-md-4">
+
                     <div class="form-group">
                         <label asp-for="NombreInsumo" class="control-label">Nombre Insumo</label>
                         <input asp-for="NombreInsumo" class="form-control" />
                     </div>
                 </div>
+                <div class="col-sm-6">
+                    <!-- Columna 3: Proveedor -->
 
-                <!-- Columna 3: Proveedor -->
-                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="UnidadMedida" class="control-label">Unidad Medida</label>
                         <input asp-for="UnidadMedida" class="form-control" readonly />
                         <span asp-validation-for="UnidadMedida" class="text-danger"></span>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <!-- Columna 1: Fecha de Compra -->
-                <div class="col-md-4">
-                    <!-- Campo editable: Descripción -->
                     <div class="form-group">
                         <label asp-for="Descripcion" class="control-label">Descripción</label>
                         <input asp-for="Descripcion" class="form-control" />
@@ -51,17 +43,13 @@
                     </div>
                 </div>
 
-                <!-- Columna 2: Tipo de Proveedor -->
-                <div class="col-md-4">
-                    <br />
-                    <div class="form-group">
-                        <input type="submit" value="Guardar" class="btn btn-primary" />
-                        <a asp-action="Index" class="btn btn-secondary">Regresar</a>
-                    </div>
+                <br />
+                <div class="form-group mt-3">
+                    <input type="submit" value="Guardar" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Regresar</a>
                 </div>
-
             </div>
-          
+
         </div>
     </form>
 </div>

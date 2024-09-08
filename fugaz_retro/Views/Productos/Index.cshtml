@@ -22,7 +22,7 @@
                 <th>
                     Precio Venta
                 </th>
-                <th>    
+                <th>
                     Categoría del producto
                 </th>
                 <th>
@@ -45,10 +45,27 @@
                     </td>
                     <td>
                         <a asp-action="Edit" asp-route-id="@item.IdProducto"><i class="fas fa-pencil-alt " style="color: green; font-size: 22px"></i></a>
-@*                         <a asp-action="Delete" asp-route-id="@item.IdProducto"><i class="fas fa-trash-alt" style="color: #bf0808; font-size: 22px"></i></a>
- *@                    </td>
+                        @*                         <a asp-action="Delete" asp-route-id="@item.IdProducto"><i class="fas fa-trash-alt" style="color: #bf0808; font-size: 22px"></i></a>
+                    *@
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Verificar si el parámetro de consulta 'success' está presente en la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Producto y Ficha técnica creada exitosamente.',
+                confirmButtonText: 'OK'
+            });
+        }
+    </script>
+}

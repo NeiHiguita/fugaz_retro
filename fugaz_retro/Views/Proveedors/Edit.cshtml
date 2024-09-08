@@ -46,7 +46,6 @@
                     <div class="form-group">
                         <label asp-for="RepresentanteLegal" class="control-label">Representante Legal</label>
                         <input asp-for="RepresentanteLegal" class="form-control" />
-                        <span asp-validation-for="RepresentanteLegal" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="Rut" class="control-label">RUT</label>
@@ -60,7 +59,6 @@
                     <div class="form-group">
                         <label asp-for="NombreCompleto" class="control-label">Nombre Completo</label>
                         <input asp-for="NombreCompleto" class="form-control" />
-                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="Documento" class="control-label">Documento</label>
@@ -73,13 +71,11 @@
                 <div class="form-group">
                     <label asp-for="Telefono" class="control-label">Teléfono</label>
                     <input asp-for="Telefono" class="form-control" />
-                    <span asp-validation-for="Telefono" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">
-                    <label asp-for="DireccionAlternativa" class="control-label">Dirección Alternativa</label>
+                    <label asp-for="DireccionAlternativa" class="control-label">Dirección</label>
                     <input asp-for="DireccionAlternativa" class="form-control" />
-                    <span asp-validation-for="DireccionAlternativa" class="text-danger"></span>
                 </div>
             </div>
 
@@ -127,25 +123,52 @@
 
                 // Validar campos vacíos
                 var isValid = true;
-                var errorMessage = "";
-
                 // Validar teléfono
                 if (!$("input[name='Telefono']").val()) {
                     isValid = false;
-                    errorMessage += "El teléfono es obligatorio.<br/>";
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campo obligatorio',
+                        text: 'El teléfono es obligatorio.'
+                    });
+                    return;
+                }
+
+                // Obtener el tipo de proveedor
+                var tipoProveedor = $("#tipoProveedorSelect").val();
+
+                // Validar según el tipo de proveedor
+                if (tipoProveedor === "Jurídico") {
+                    // Validar Representante Legal
+                    if (!$("input[name='RepresentanteLegal']").val()) {
+                        isValid = false;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Campo obligatorio',
+                            text: 'El representante legal es obligatorio.'
+                        });
+                        return;
+                    }
+                } else if (tipoProveedor === "Natural") {
+                    // Validar Nombre Completo
+                    if (!$("input[name='NombreCompleto']").val()) {
+                        isValid = false;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Campo obligatorio',
+                            text: 'El nombre completo es obligatorio.'
+                        });
+                        return;
+                    }
                 }
 
                 // Validar dirección alternativa
                 if (!$("input[name='DireccionAlternativa']").val()) {
                     isValid = false;
-                    errorMessage += "La dirección alternativa es obligatoria.<br/>";
-                }
-
-                if (!isValid) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Campos obligatorios',
-                        html: errorMessage
+                        title: 'Campo obligatorio',
+                        text: 'La dirección  es obligatoria.'
                     });
                     return;
                 }
